@@ -1,0 +1,54 @@
+# Product Requirements Document (PRD)
+
+## Food Selling & Marketing Website
+
+**Project Type:** Small-scale food e-commerce website  
+**Technology Stack:** MEVN + Supabase  
+**Version:** 1.0
+
+## 1. Project Overview
+The project is a simple, responsive website for marketing and selling food products online. Customers can browse available food items, view product details, add items to a cart, and place orders. Administrators can manage products and monitor orders.
+
+## 2. Project Objectives
+- Showcase food products with images, descriptions, and prices.
+- Make it easy for customers to order food online.
+- Provide secure online payment options.
+- Enable administrators to manage products and orders.
+- Deliver a fast, mobile-friendly user experience.
+
+## 3. Target Users
+- **Customers:** Browse food products and place orders.
+- **Administrators:** Manage products, inventory, and customer orders.
+
+## 4. Core Features
+### Customer Features
+- Homepage with promotional banners and featured food items.
+- Food catalogue with categories and search.
+- Product details, images, prices, and availability.
+- Shopping cart and quantity management.
+- Customer registration and login.
+- Checkout with delivery details.
+- Online payment through Paystack or Flutterwave.
+- Order confirmation and order history.
+- Contact page with business information.
+
+### Admin Features
+- Secure admin login.
+- Add, edit, and delete food products.
+- Upload and manage product images.
+- Manage food categories and prices.
+- Update product availability and stock.
+- View and manage customer orders.
+- Update order statuses.
+
+## 5. Main Pages
+1. Home
+2. Shop / Food Catalogue
+3. Product Details
+4. Shopping Cart
+5. Checkout
+6. Login / Register
+7. My Orders
+8. About Us
+9. Contact Us
+10. Admin Dashboard

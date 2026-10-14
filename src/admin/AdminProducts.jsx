@@ -1,0 +1,424 @@
+import { useMemo, useState } from 'react'
+import { Package, Pencil, Plus, Search, Trash2, Utensils } from 'lucide-react'
+import { CATEGORIES, DIET_TAGS, getCategoryName } from '../data/products.js'
+import { useProducts } from '../context/ProductContext.jsx'
+import { useToast } from '../context/ToastContext.jsx'
+import { formatNaira } from '../lib/currency.js'
+import { Button } from '../components/ui/Button.jsx'
+import { Modal } from '../components/ui/Modal.jsx'
+import { Field, controlClass, EmptyState } from '../components/ui/Form.jsx'
+import { StockBadge } from '../components/ui/Badges.jsx'
+
+const emptyForm = {
+  name: '',
+  category: 'gourmet-bowls',
+  price: '',
+  compareAt: '',
+  stock: '',
+  short: '',
+  description: '',
+  image: '',
+  tags: [],
+  featured: false,
+}
+
+export default function AdminProducts() {
+  const { products, saveProduct, deleteProduct } = useProducts()
+  const { showToast } = useToast()
+
+  const [search, setSearch] = useState('')
+  const [category, setCategory] = useState('all')
+  const [editing, setEditing] = useState(null) // product or 'new'
+  const [form, setForm] = useState(emptyForm)
+  const [errors, setErrors] = useState({})
+  const [deleting, setDeleting] = useState(null)
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase()
+    return products.filter((p) => {
+      if (category !== 'all' && p.category !== category) return false
+      if (q && !p.name.toLowerCase().includes(q)) return false
+      return true
+    })
+  }, [products, search, category])
+
+  const openNew = () => {
+    setForm(emptyForm)
+    setErrors({})
+    setEditing('new')
+  }
+
+  const openEdit = (product) => {
+    setForm({
+      name: product.name,
+      category: product.category,
+      price: String(product.price),
+      compareAt: product.compareAt ? String(product.compareAt) : '',
+      stock: String(product.stock),
+      short: product.short || '',
+      description: product.description || '',
+      image: product.image || '',
+      tags: product.tags || [],
+      featured: Boolean(product.featured),
+    })
+    setErrors({})
+    setEditing(product)
+  }
+
+  const setField = (key) => (e) => {
+    const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value
+    setForm((prev) => ({ ...prev, [key]: value }))
+  }
+
+  const toggleTag = (tagId) =>
+    setForm((prev) => ({
+      ...prev,
+      tags: prev.tags.includes(tagId) ? prev.tags.filter((t) => t !== tagId) : [...prev.tags, tagId],
+    }))
+
+  const handleSave = (e) => {
+    e.preventDefault()
+    const next = {}
+    if (!form.name.trim()) next.name = 'Enter a dish name.'
+    if (!form.price || Number(form.price) <= 0) next.price = 'Enter a valid price.'
+    if (form.stock === '' || Number(form.stock) < 0) next.stock = 'Enter a stock quantity (0 for sold out).'
+    setErrors(next)
+    if (Object.keys(next).length > 0) return
+
+    const payload = {
+      name: form.name.trim(),
+      category: form.category,
+      price: Number(form.price),
+      compareAt: form.compareAt ? Number(form.compareAt) : null,
+      stock: Number(form.stock),
+      short: form.short.trim(),
+      description: form.description.trim() || form.short.trim(),
+      image: form.image.trim() || '/images/hero-jollof-chicken.jpg',
+      tags: form.tags,
+      featured: form.featured,
+    }
+
+    if (editing === 'new') {
+      saveProduct({ ...payload, id: `p${Date.now()}`, rating: 4.5, reviews: 0, alt: payload.name })
+      showToast('Product added', 'success')
+    } else {
+      saveProduct({ ...editing, ...payload })
+      showToast('Product updated', 'success')
+    }
+    setEditing(null)
+  }
+
+  const handleDelete = () => {
+    deleteProduct(deleting.id)
+    showToast(`${deleting.name} deleted`)
+    setDeleting(null)
+  }
+
+  const quickStock = (product, value) => {
+    const stock = Math.max(0, Number(value) || 0)
+    saveProduct({ ...product, stock })
+  }
+
+  return (
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="font-display text-headline-lg text-text-primary">Products</h1>
+          <p className="mt-1 text-body-md text-text-secondary">
+            {products.length} dishes on the menu · updates apply to the storefront instantly
+          </p>
+        </div>
+        <Button onClick={openNew}>
+          <Plus size={16} aria-hidden="true" />
+          Add product
+        </Button>
+      </div>
+
+      {/* Filters */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="relative flex flex-1 items-center rounded-lg border border-border-strong bg-white px-3 py-2 shadow-sm">
+          <Search size={16} className="shrink-0 text-text-tertiary" aria-hidden="true" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search products by name…"
+            aria-label="Search products"
+            className="ml-2 w-full bg-transparent text-body-md text-text-primary placeholder:text-text-tertiary focus:outline-none"
+          />
+        </div>
+        <select
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+          aria-label="Filter by category"
+          className="rounded-lg border border-border-strong bg-white px-3 py-2 text-body-md text-text-primary shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+        >
+          <option value="all">All categories</option>
+          {CATEGORIES.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Table */}
+      {filtered.length === 0 ? (
+        <EmptyState
+          icon={Package}
+          title="No products found"
+          description="Adjust your search or add a new dish to the menu."
+          action={<Button onClick={openNew}>Add product</Button>}
+        />
+      ) : (
+        <div className="overflow-hidden rounded-2xl bg-white shadow-card">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[720px] text-left text-body-md">
+              <thead>
+                <tr className="border-b border-border-subtle text-body-sm text-text-tertiary">
+                  <th className="px-4 py-3 font-medium">Product</th>
+                  <th className="px-4 py-3 font-medium">Category</th>
+                  <th className="px-4 py-3 font-medium">Price</th>
+                  <th className="px-4 py-3 font-medium">Stock</th>
+                  <th className="px-4 py-3 font-medium">Status</th>
+                  <th className="px-4 py-3 text-right font-medium">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((product) => (
+                  <tr key={product.id} className="border-b border-border-subtle last:border-0 hover:bg-surface-container-low">
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        <div className="h-11 w-11 shrink-0 overflow-hidden rounded-lg bg-surface-container">
+                          <img src={product.image} alt="" className="h-full w-full object-cover" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="truncate font-medium text-text-primary">{product.name}</p>
+                          <p className="truncate text-body-sm text-text-secondary">{product.short}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-text-secondary">{getCategoryName(product.category)}</td>
+                    <td className="tnum px-4 py-3 font-semibold text-text-primary">{formatNaira(product.price)}</td>
+                    <td className="px-4 py-3">
+                      <input
+                        type="number"
+                        min={0}
+                        value={product.stock}
+                        onChange={(e) => quickStock(product, e.target.value)}
+                        aria-label={`Stock for ${product.name}`}
+                        className="tnum w-16 rounded-lg border border-border-strong bg-white px-2 py-1 text-body-md text-text-primary focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                      />
+                    </td>
+                    <td className="px-4 py-3">
+                      <StockBadge stock={product.stock} />
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          type="button"
+                          aria-label={`Edit ${product.name}`}
+                          onClick={() => openEdit(product)}
+                          className="flex h-8 w-8 items-center justify-center rounded-lg text-text-secondary transition-colors hover:bg-surface-container hover:text-text-primary"
+                        >
+                          <Pencil size={15} aria-hidden="true" />
+                        </button>
+                        <button
+                          type="button"
+                          aria-label={`Delete ${product.name}`}
+                          onClick={() => setDeleting(product)}
+                          className="flex h-8 w-8 items-center justify-center rounded-lg text-text-secondary transition-colors hover:bg-red-50 hover:text-red-600"
+                        >
+                          <Trash2 size={15} aria-hidden="true" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Add / edit modal */}
+      <Modal
+        open={editing !== null}
+        onClose={() => setEditing(null)}
+        title={editing === 'new' ? 'Add product' : 'Edit product'}
+        description={editing === 'new' ? 'Create a new dish for the storefront' : `Update ${editing?.name || ''}`}
+        maxWidth="max-w-2xl"
+        footer={
+          <div className="flex justify-end gap-3">
+            <Button variant="secondary" onClick={() => setEditing(null)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSave}>{editing === 'new' ? 'Add product' : 'Save changes'}</Button>
+          </div>
+        }
+      >
+        <form onSubmit={handleSave} className="grid gap-4 sm:grid-cols-2" noValidate>
+          <Field label="Dish name" htmlFor="p-name" error={errors.name} required className="sm:col-span-2">
+            <input
+              id="p-name"
+              type="text"
+              placeholder="Smokey Party Jollof"
+              className={controlClass(errors.name)}
+              value={form.name}
+              onChange={setField('name')}
+            />
+          </Field>
+          <Field label="Category" htmlFor="p-category" required>
+            <select
+              id="p-category"
+              className={controlClass(false)}
+              value={form.category}
+              onChange={setField('category')}
+            >
+              {CATEGORIES.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field label="Short description" htmlFor="p-short">
+            <input
+              id="p-short"
+              type="text"
+              placeholder="Wood-fired rice & dodo"
+              className={controlClass(false)}
+              value={form.short}
+              onChange={setField('short')}
+            />
+          </Field>
+          <Field label="Price (₦)" htmlFor="p-price" error={errors.price} required>
+            <input
+              id="p-price"
+              type="number"
+              min={0}
+              step={50}
+              placeholder="3500"
+              className={controlClass(errors.price)}
+              value={form.price}
+              onChange={setField('price')}
+            />
+          </Field>
+          <Field label="Compare-at price (₦)" htmlFor="p-compare" hint="Optional — shows a strike-through price">
+            <input
+              id="p-compare"
+              type="number"
+              min={0}
+              step={50}
+              placeholder="7200"
+              className={controlClass(false)}
+              value={form.compareAt}
+              onChange={setField('compareAt')}
+            />
+          </Field>
+          <Field label="Stock quantity" htmlFor="p-stock" error={errors.stock} required>
+            <input
+              id="p-stock"
+              type="number"
+              min={0}
+              placeholder="24"
+              className={controlClass(errors.stock)}
+              value={form.stock}
+              onChange={setField('stock')}
+            />
+          </Field>
+          <Field label="Image URL" htmlFor="p-image" hint="Paste an image link or keep the default" className="sm:col-span-2">
+            <input
+              id="p-image"
+              type="text"
+              placeholder="/images/hero-jollof-chicken.jpg"
+              className={controlClass(false)}
+              value={form.image}
+              onChange={setField('image')}
+            />
+          </Field>
+          <Field label="Full description" htmlFor="p-description" className="sm:col-span-2">
+            <textarea
+              id="p-description"
+              rows={3}
+              placeholder="Describe the dish, ingredients and preparation…"
+              className={controlClass(false)}
+              value={form.description}
+              onChange={setField('description')}
+            />
+          </Field>
+          <div className="sm:col-span-2">
+            <span className="text-label-md text-text-primary">Tags</span>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {DIET_TAGS.map((tag) => {
+                const checked = form.tags.includes(tag.id)
+                return (
+                  <label
+                    key={tag.id}
+                    className={`flex cursor-pointer items-center gap-1.5 rounded-full px-3 py-1.5 text-label-sm transition-colors ${
+                      checked ? 'bg-primary text-white' : 'bg-surface-container-low text-text-secondary'
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      className="h-3.5 w-3.5 accent-primary"
+                      checked={checked}
+                      onChange={() => toggleTag(tag.id)}
+                    />
+                    {tag.name}
+                  </label>
+                )
+              })}
+            </div>
+          </div>
+          <label className="flex cursor-pointer items-center gap-2 sm:col-span-2">
+            <input
+              type="checkbox"
+              className="h-4 w-4 rounded border-border-strong accent-primary"
+              checked={form.featured}
+              onChange={setField('featured')}
+            />
+            <span className="text-label-md text-text-primary">
+              Feature on homepage
+            </span>
+          </label>
+          <button type="submit" className="hidden" aria-hidden="true" />
+        </form>
+      </Modal>
+
+      {/* Delete confirmation */}
+      <Modal
+        open={deleting !== null}
+        onClose={() => setDeleting(null)}
+        title="Delete product"
+        description="This removes the dish from the storefront menu."
+        maxWidth="max-w-sm"
+        footer={
+          <div className="flex justify-end gap-3">
+            <Button variant="secondary" onClick={() => setDeleting(null)}>
+              Keep product
+            </Button>
+            <Button variant="destructive" onClick={handleDelete}>
+              <Trash2 size={15} aria-hidden="true" />
+              Delete
+            </Button>
+          </div>
+        }
+      >
+        <div className="flex items-center gap-3.5">
+          <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-surface-container">
+            {deleting && <img src={deleting.image} alt="" className="h-full w-full object-cover" />}
+          </div>
+          <div>
+            <p className="font-medium text-text-primary">{deleting?.name}</p>
+            <p className="tnum text-body-sm text-text-secondary">{deleting ? formatNaira(deleting.price) : ''}</p>
+          </div>
+        </div>
+        <p className="mt-3 flex items-center gap-1.5 text-body-sm text-text-tertiary">
+          <Utensils size={13} aria-hidden="true" />
+          Customers will no longer see this dish.
+        </p>
+      </Modal>
+    </div>
+  )
+}
