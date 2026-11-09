@@ -2,11 +2,12 @@ import { Link } from 'react-router-dom'
 
 const variants = {
   primary: 'bg-primary text-white shadow-sm hover:bg-primary-hover active:scale-[0.98]',
-  secondary: 'bg-white text-text-primary border border-border-default shadow-sm hover:bg-gray-50 active:bg-gray-100',
-  destructive: 'bg-red-50 text-red-600 border border-red-200 hover:bg-red-100',
+  secondary: 'bg-surface text-text-primary border border-border-default shadow-sm hover:bg-surface-container-low active:bg-surface-container',
+  destructive:
+    'bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:border-red-900 dark:hover:bg-red-900/40',
   ghost: 'text-text-secondary hover:text-text-primary hover:bg-surface-container',
   subtle: 'bg-surface-container-low text-text-primary hover:bg-surface-container',
-  dark: 'bg-charcoal text-white hover:bg-black/85',
+  dark: 'bg-surface-container-low text-text-primary hover:bg-surface-container dark:bg-surface-container dark:text-text-primary dark:hover:bg-surface-container-high',
 }
 
 const sizes = {

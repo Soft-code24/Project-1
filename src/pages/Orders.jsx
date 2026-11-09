@@ -58,7 +58,7 @@ export default function Orders() {
             className={`shrink-0 rounded-full px-4 py-2 text-label-md transition-colors ${
               tab === t.id
                 ? 'bg-primary font-semibold text-white shadow-sm'
-                : 'bg-white text-text-secondary border border-border-default hover:text-text-primary'
+                : 'bg-surface text-text-secondary border border-border-default hover:text-text-primary'
             }`}
           >
             {t.label}
@@ -76,7 +76,7 @@ export default function Orders() {
       ) : (
         <ul className="flex flex-col gap-4">
           {filtered.map((order) => (
-            <li key={order.id} className="rounded-2xl border border-border-subtle bg-white p-4 shadow-card sm:p-5">
+            <li key={order.id} className="rounded-2xl border border-border-subtle bg-surface p-4 shadow-card sm:p-5">
               <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border-subtle pb-3">
                 <div className="flex items-center gap-2.5">
                   <span className="tnum font-display text-headline-sm text-text-primary">{order.id}</span>
@@ -115,7 +115,7 @@ export default function Orders() {
                 </div>
                 <div className="flex gap-2">
                   {ACTIVE_STATUSES.includes(order.status) && (
-                    <span className="flex items-center gap-1.5 rounded-lg bg-sky-50 px-3 py-1.5 text-label-sm font-medium text-sky-700">
+                    <span className="flex items-center gap-1.5 rounded-lg bg-sky-50 dark:bg-sky-900/20 px-3 py-1.5 text-label-sm font-medium text-sky-700 dark:text-sky-400">
                       <Package size={14} aria-hidden="true" />
                       On the way
                     </span>

@@ -50,9 +50,9 @@ export function MiniCart() {
       {/* Slide-out panel - rendered into document.body via portal */}
       {open && (
         createPortal(
-          <div className="fixed inset-y-0 right-0 z-[9999] flex h-full w-[90vw] max-w-[420px] flex-col bg-white shadow-card transition-transform duration-300 ease-in-out translate-x-0" aria-hidden={false} aria-label="Shopping cart">
+          <div className="fixed inset-y-0 right-0 z-[9999] flex h-full w-[90vw] max-w-[420px] flex-col bg-surface shadow-card transition-transform duration-300 ease-in-out translate-x-0" aria-hidden={false} aria-label="Shopping cart">
             {/* Cart header */}
-            <div className="flex h-16 items-center justify-between border-b border-border-subtle bg-white px-5">
+            <div className="flex h-16 items-center justify-between border-b border-border-subtle bg-surface px-5">
               <h2 className="font-display text-headline-sm text-text-primary">Your Cart</h2>
               <button
                 type="button"
@@ -75,7 +75,7 @@ export function MiniCart() {
                 <>
                   <ul className="flex flex-col gap-3">
                     {detailedItems.map(({ product, qty, lineTotal }) => (
-                      <li key={product.id} className="flex gap-3 rounded-xl border border-border-subtle bg-white p-3 shadow-sm">
+                      <li key={product.id} className="flex gap-3 rounded-xl border border-border-subtle bg-surface p-3 shadow-sm">
                         <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-surface-container-low">
                           <Link to={`/product/${product.id}`} className="h-full w-full object-cover" aria-hidden="true">
                             <img src={product.image} alt={product.alt} className="h-full w-full object-cover" />
@@ -131,7 +131,7 @@ export function MiniCart() {
                     </dl>
 
                     {freeDeliveryGap > 0 && (
-                      <p className="mt-3 flex items-center gap-1.5 rounded-lg bg-orange-50 px-3 py-2 text-body-sm text-orange-700">
+                      <p className="mt-3 flex items-center gap-1.5 rounded-lg bg-orange-50 dark:bg-orange-900/20 px-3 py-2 text-body-sm text-orange-700 dark:text-orange-400">
                         <span className="text-[12px]">Add {formatNaira(freeDeliveryGap)} more for free delivery</span>
                       </p>
                     )}
@@ -153,7 +153,7 @@ export function MiniCart() {
 
       {/* Backdrop */}
       {open && (
-        <div className="fixed inset-0 z-[90] bg-charcoal/40 backdrop-blur-sm" onClick={closeCart} aria-hidden="true" />
+        <div className="fixed inset-0 z-[90] bg-black/40 dark:bg-black/60 backdrop-blur-sm" onClick={closeCart} aria-hidden="true" />
       )}
     </>
   )

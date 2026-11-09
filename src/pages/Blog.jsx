@@ -67,12 +67,12 @@ export default function Blog() {
       </p>
       <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
         {posts.map((post) => (
-          <article key={post.id} className="group rounded-2xl border border-border-subtle bg-white shadow-card overflow-hidden">
+          <article key={post.id} className="group rounded-2xl border border-border-subtle bg-surface shadow-card overflow-hidden">
             <div className="aspect-[4/3] overflow-hidden bg-surface-container-low">
               {post.cover_image ? (
                 <img src={post.cover_image} alt="" className="h-full w-full object-cover group-hover:scale-105 transition-transform" />
               ) : (
-                <div className="h-full flex items-center justify-center bg-gray-100 text-gray-400">
+                <div className="h-full flex items-center justify-center bg-surface-container-low text-text-tertiary">
                   <Utensils size={32} aria-hidden="true" />
                 </div>
               )}

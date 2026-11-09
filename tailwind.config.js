@@ -1,49 +1,52 @@
 /** @type {import('tailwindcss').Config} */
 export default {
+  darkMode: 'class',
   content: ['./index.html', './src/**/*.{js,jsx}'],
   theme: {
     extend: {
       colors: {
-        'page-bg': '#F9FAFB',
-        'surface-white': '#FFFFFF',
+        // Semantic theme tokens — resolved via CSS custom properties so both
+        // light and dark themes work by swapping the variable on <html>.
+        'page-bg': { DEFAULT: 'rgb(var(--color-page-bg) / <alpha-value>)' },
+        'surface-white': { DEFAULT: 'rgb(var(--color-bg-white) / <alpha-value>)' },
         surface: {
-          DEFAULT: '#f8f9fa',
-          dim: '#d9dadb',
-          'container-lowest': '#ffffff',
-          'container-low': '#f3f4f5',
-          container: '#edeeef',
-          'container-high': '#e7e8e9',
-          'container-highest': '#e1e3e4',
+          DEFAULT: 'rgb(var(--color-surface) / <alpha-value>)',
+          dim: 'rgb(var(--color-surface-dim) / <alpha-value>)',
+          'container-lowest': 'rgb(var(--color-surface-container-lowest) / <alpha-value>)',
+          'container-low': 'rgb(var(--color-surface-container-low) / <alpha-value>)',
+          container: 'rgb(var(--color-surface-container) / <alpha-value>)',
+          'container-high': 'rgb(var(--color-surface-container-high) / <alpha-value>)',
+          'container-highest': 'rgb(var(--color-surface-container-highest) / <alpha-value>)',
         },
-        'on-surface': '#191c1d',
-        'on-surface-variant': '#59413a',
+        'on-surface': 'rgb(var(--color-on-surface) / <alpha-value>)',
+        'on-surface-variant': 'rgb(var(--color-on-surface-variant) / <alpha-value>)',
         outline: {
-          DEFAULT: '#8d7168',
-          variant: '#e1bfb5',
+          DEFAULT: 'rgb(var(--color-outline) / <alpha-value>)',
+          variant: 'rgb(var(--color-outline-variant) / <alpha-value>)',
         },
-        // Brand action color (Orange-700) — CTAs, active states, badges
+        // Brand action color — theme-aware.
         primary: {
-          DEFAULT: '#C2410C',
-          container: '#c2410c',
-          hover: '#9A3412',
+          DEFAULT: 'rgb(var(--color-primary) / <alpha-value>)',
+          container: 'rgb(var(--color-primary-container) / <alpha-value>)',
+          hover: 'rgb(var(--color-primary-hover) / <alpha-value>)',
         },
-        // Basil green — freshness, success, secondary brand
+        // Basil green — freshness, success, secondary brand (kept across themes).
         secondary: {
-          DEFAULT: '#16A34A',
-          container: '#82f5c1',
+          DEFAULT: 'rgb(var(--color-secondary) / <alpha-value>)',
+          container: 'rgb(var(--color-secondary-container) / <alpha-value>)',
         },
-        // Neutral text tokens
-        'text-primary': '#111827',
-        'text-secondary': '#4B5563',
-        'text-tertiary': '#9CA3AF',
-        // Border tokens
-        'border-subtle': '#F3F4F6',
-        'border-default': '#E5E7EB',
-        'border-strong': '#D1D5DB',
-        // Brand palette accents
-        cream: '#FFF8EB',
-        charcoal: '#1C1917',
-        basil: '#16A34A',
+        // Neutral text tokens.
+        'text-primary': 'rgb(var(--color-text-primary) / <alpha-value>)',
+        'text-secondary': 'rgb(var(--color-text-secondary) / <alpha-value>)',
+        'text-tertiary': 'rgb(var(--color-text-tertiary) / <alpha-value>)',
+        // Border tokens.
+        'border-subtle': 'rgb(var(--color-border-subtle) / <alpha-value>)',
+        'border-default': 'rgb(var(--color-border-default) / <alpha-value>)',
+        'border-strong': 'rgb(var(--color-border-strong) / <alpha-value>)',
+        // Brand palette accents.
+        cream: 'rgb(var(--color-cream) / <alpha-value>)',
+        charcoal: 'rgb(var(--color-charcoal) / <alpha-value>)',
+        basil: 'rgb(var(--color-basil) / <alpha-value>)',
       },
       fontFamily: {
         display: ['"Plus Jakarta Sans"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
@@ -101,6 +104,10 @@ export default {
           '0%': { opacity: '0', transform: 'scale(0.96)' },
           '100%': { opacity: '1', transform: 'scale(1)' },
         },
+        'theme-fade': {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
       },
       animation: {
         'toast-in': 'toast-in 0.25s ease-out',
@@ -108,6 +115,10 @@ export default {
         'slide-up': 'slide-up 0.3s ease-out',
         'sheet-in': 'sheet-in 0.3s cubic-bezier(0.32, 0.72, 0, 1)',
         'scale-in': 'scale-in 0.2s ease-out',
+        'theme-fade': 'theme-fade 0.2s ease-out',
+      },
+      transitionDuration: {
+        theme: '200ms',
       },
     },
   },

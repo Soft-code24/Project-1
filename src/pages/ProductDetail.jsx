@@ -104,7 +104,7 @@ export default function ProductDetail() {
               aria-label={favorite ? 'Remove from favorites' : 'Save to favorites'}
               aria-pressed={favorite}
               onClick={() => setFavorite((f) => !f)}
-              className="absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-text-secondary shadow-sm backdrop-blur transition-colors hover:text-primary active:scale-90"
+              className="absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full bg-surface/90 text-text-secondary shadow-sm backdrop-blur transition-colors hover:text-primary active:scale-90"
             >
               <Heart size={18} className={favorite ? 'fill-primary text-primary' : ''} aria-hidden="true" />
             </button>
@@ -117,7 +117,7 @@ export default function ProductDetail() {
             ].map((item) => (
               <div
                 key={item.label}
-                className="flex flex-col items-center gap-1.5 rounded-xl bg-white px-2 py-3 text-center shadow-card"
+                className="flex flex-col items-center gap-1.5 rounded-xl bg-surface px-2 py-3 text-center shadow-card"
               >
                 <item.icon size={18} className="text-primary" aria-hidden="true" />
                 <span className="text-label-sm text-text-secondary">{item.label}</span>
@@ -130,7 +130,7 @@ export default function ProductDetail() {
         <div className="flex flex-col">
           <Link
             to={`/shop?category=${product.category}`}
-            className="w-fit rounded-full bg-orange-50 px-3 py-1 text-label-sm font-medium text-primary transition-colors hover:bg-orange-100"
+            className="w-fit rounded-full bg-orange-50 dark:bg-orange-900/20 px-3 py-1 text-label-sm font-medium text-primary dark:text-text-primary transition-colors hover:bg-orange-100 dark:hover:bg-orange-900/40"
           >
             {getCategoryName(product.category)}
           </Link>
@@ -158,7 +158,7 @@ export default function ProductDetail() {
                 <span className="tnum text-body-lg text-text-tertiary line-through">
                   {formatNaira(product.compareAt)}
                 </span>
-                <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-badge-xs font-semibold text-amber-800">
+                <span className="rounded-full bg-amber-100 dark:bg-amber-900/20 px-2.5 py-0.5 text-badge-xs font-semibold text-amber-800 dark:text-amber-400">
                   Save {formatNaira(product.compareAt - product.price)}
                 </span>
               </>
@@ -179,7 +179,7 @@ export default function ProductDetail() {
             </div>
           </div>
 
-          <div className="mt-6 flex flex-col gap-4 rounded-2xl bg-white p-4 shadow-card">
+          <div className="mt-6 flex flex-col gap-4 rounded-2xl bg-surface p-4 shadow-card">
             <div className="flex items-center justify-between">
               <span className="text-label-md font-semibold text-text-primary">Quantity</span>
               <QuantityStepper
@@ -199,13 +199,13 @@ export default function ProductDetail() {
               </Button>
             </div>
             {!soldOut && product.stock <= 5 && (
-              <p className="flex items-center gap-1.5 text-body-sm text-amber-700">
+              <p className="flex items-center gap-1.5 text-body-sm text-amber-700 dark:text-amber-400">
                 <Timer size={14} aria-hidden="true" />
                 Only {product.stock} left — order soon.
               </p>
             )}
             <p className="flex items-center gap-1.5 text-body-sm text-text-tertiary">
-              <Star size={13} className="text-amber-500" aria-hidden="true" />
+              <Star size={13} className="text-amber-500 dark:text-amber-400" aria-hidden="true" />
               Rated {product.rating.toFixed(1)} by {product.reviews} happy customers
             </p>
           </div>
@@ -231,7 +231,7 @@ export default function ProductDetail() {
 
       {/* Mobile sticky order bar */}
       {!soldOut && (
-        <div className="fixed inset-x-0 bottom-16 z-40 flex items-center justify-between gap-3 border-t border-border-default bg-white/95 px-4 py-3 shadow-overlay backdrop-blur md:hidden">
+        <div className="fixed inset-x-0 bottom-16 z-40 flex items-center justify-between gap-3 border-t border-border-default bg-surface/95 dark:bg-surface/95 px-4 py-3 shadow-overlay backdrop-blur md:hidden">
           <div className="flex flex-col">
             <span className="tnum font-display text-price-md font-bold text-text-primary">
               {formatNaira(product.price * qty)}

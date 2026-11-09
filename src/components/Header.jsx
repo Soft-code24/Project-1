@@ -1,20 +1,25 @@
 import { Link, NavLink } from 'react-router-dom'
-import { MapPin, Search, User } from 'lucide-react'
+import { MapPin, Moon, Search, Sun, User } from 'lucide-react'
 import { SavorBiteLogo } from './Logo.jsx'
 import { MiniCart } from './MiniCart.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
+import { useTheme } from '../context/ThemeContext.jsx'
 import { FEATURED_LINKS } from '../data/site.js'
 
 const navLinkClass = ({ isActive }) =>
   `rounded-lg px-3 py-2 text-label-md transition-colors ${
-    isActive ? 'bg-orange-50 font-semibold text-primary' : 'text-text-secondary hover:bg-surface-container hover:text-text-primary'
+    isActive
+      ? 'bg-orange-50 dark:bg-orange-900/20 font-semibold text-primary'
+      : 'text-text-secondary hover:bg-surface-container hover:text-text-primary'
   }`
 
 export function Header() {
   const { user } = useAuth()
+  const { setTheme } = useTheme()
+  const isDark = document.documentElement.classList.contains('dark')
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border-subtle bg-white/90 pt-safe backdrop-blur-xl">
+    <header className="sticky top-0 z-50 border-b border-border-subtle bg-surface/90 pt-safe backdrop-blur-xl">
       <div className="container-page flex h-16 items-center justify-between gap-3">
         <Link to="/" className="flex min-w-0 items-center gap-2">
           <SavorBiteLogo className="h-8 w-8 shrink-0" />
@@ -47,6 +52,19 @@ export function Header() {
           </Link>
 
           <MiniCart />
+
+          <button
+            type="button"
+            aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+            onClick={() => setTheme(isDark ? 'light' : 'dark')}
+            className="flex h-11 w-11 items-center justify-center rounded-full text-text-secondary transition-colors hover:bg-surface-container hover:text-text-primary"
+          >
+            {isDark ? (
+              <Sun size={18} aria-hidden="true" />
+            ) : (
+              <Moon size={18} aria-hidden="true" />
+            )}
+          </button>
 
           <Link
             to="/account"

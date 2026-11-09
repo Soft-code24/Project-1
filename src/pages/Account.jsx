@@ -49,27 +49,27 @@ export default function Account() {
 
       <div className="grid gap-5 lg:grid-cols-[7fr_5fr] lg:items-start">
         <div className="flex flex-col gap-5">
-          <div className="flex items-center gap-4 rounded-2xl border border-border-subtle bg-white p-5 shadow-card">
+          <div className="flex items-center gap-4 rounded-2xl border border-border-subtle bg-surface p-5 shadow-card">
             <span className="flex h-14 w-14 items-center justify-center rounded-full bg-primary text-headline-md font-semibold text-white">
               {user.name.charAt(0).toUpperCase()}
             </span>
             <div className="min-w-0">
               <p className="truncate font-display text-headline-md text-text-primary">{user.name}</p>
               <p className="truncate text-body-md text-text-secondary">{user.email}</p>
-              <span className="mt-1 inline-block rounded-full bg-emerald-50 px-2.5 py-0.5 text-badge-xs font-medium text-emerald-700">
+              <span className="mt-1 inline-block rounded-full bg-emerald-50 dark:bg-emerald-900/20 px-2.5 py-0.5 text-badge-xs font-medium text-emerald-700 dark:text-emerald-400">
                 {user.role === 'admin' ? 'Administrator' : 'Customer'}
               </span>
             </div>
           </div>
 
-          <div className="overflow-hidden rounded-2xl border border-border-subtle bg-white shadow-card">
+          <div className="overflow-hidden rounded-2xl border border-border-subtle bg-surface shadow-card">
             {menuLinks.map((link) => (
               <Link
                 key={link.to}
                 to={link.to}
                 className="flex items-center gap-3.5 border-b border-border-subtle px-5 py-4 transition-colors last:border-0 hover:bg-surface-container-low"
               >
-                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-orange-50 text-primary">
+                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-orange-50 dark:bg-orange-900/20 text-primary dark:text-text-primary">
                   <link.icon size={17} aria-hidden="true" />
                 </span>
                 <span className="flex-1">
@@ -81,7 +81,7 @@ export default function Account() {
             ))}
           </div>
 
-          <div className="rounded-2xl border border-border-subtle bg-white p-5 shadow-card">
+          <div className="rounded-2xl border border-border-subtle bg-surface p-5 shadow-card">
             <h2 className="font-display text-headline-sm text-text-primary">Delivery preferences</h2>
             <p className="mt-1.5 text-body-md text-text-secondary">
               Default delivery area: <span className="font-medium text-text-primary">Lagos, NG</span> — Lekki,
@@ -91,7 +91,7 @@ export default function Account() {
         </div>
 
         <div className="flex flex-col gap-3">
-          <div className="rounded-2xl border border-border-subtle bg-white p-5 shadow-card">
+          <div className="rounded-2xl border border-border-subtle bg-surface p-5 shadow-card">
             <h2 className="font-display text-headline-sm text-text-primary">Session</h2>
             <p className="mt-1.5 text-body-sm text-text-secondary">
               Manage your account access. You can log back in any time.
@@ -112,7 +112,7 @@ export default function Account() {
 
           <Link
             to="/admin/login"
-            className="flex items-center gap-3 rounded-2xl border border-border-subtle bg-white p-5 shadow-card transition-colors hover:border-border-strong"
+            className="flex items-center gap-3 rounded-2xl border border-border-subtle bg-surface p-5 shadow-card transition-colors hover:border-border-strong"
           >
             <span className="flex h-9 w-9 items-center justify-center rounded-full bg-charcoal text-white">
               <LayoutDashboard size={17} aria-hidden="true" />

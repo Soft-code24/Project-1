@@ -72,7 +72,7 @@ export default function Cart() {
           {detailedItems.map(({ product, qty, lineTotal }) => (
             <li
               key={product.id}
-              className="flex gap-3 rounded-2xl border border-border-subtle bg-white p-3 shadow-card"
+              className="flex gap-3 rounded-2xl border border-border-subtle bg-surface p-3 shadow-card"
             >
               <Link
                 to={`/product/${product.id}`}
@@ -125,7 +125,7 @@ export default function Cart() {
 
         {/* Summary */}
         <div className="flex flex-col gap-3 lg:sticky lg:top-24">
-          <div className="rounded-2xl border border-border-subtle bg-white p-5 shadow-card">
+          <div className="rounded-2xl border border-border-subtle bg-surface p-5 shadow-card">
             <h2 className="font-display text-headline-md text-text-primary">Order Summary</h2>
 
             <form onSubmit={applyPromo} className="mt-4 flex gap-2">
@@ -135,7 +135,7 @@ export default function Cart() {
                 onChange={(e) => setPromoInput(e.target.value)}
                 placeholder="Promo code"
                 aria-label="Promo code"
-                className="w-full rounded-lg border border-border-strong bg-white px-3.5 py-2 text-body-md text-text-primary placeholder:text-text-tertiary focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                className="w-full rounded-lg border border-border-strong bg-surface px-3.5 py-2 text-body-md text-text-primary placeholder:text-text-tertiary focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
               />
               <Button type="submit" variant="secondary" className="shrink-0">
                 <BadgePercent size={15} aria-hidden="true" />
@@ -173,7 +173,7 @@ export default function Cart() {
             </dl>
 
             {freeDeliveryGap > 0 && (
-              <p className="mt-3 flex items-center gap-1.5 rounded-lg bg-orange-50 px-3 py-2 text-body-sm text-orange-700">
+              <p className="mt-3 flex items-center gap-1.5 rounded-lg bg-orange-50 dark:bg-orange-900/20 px-3 py-2 text-body-sm text-orange-700 dark:text-orange-400">
                 <Truck size={14} aria-hidden="true" />
                 Add {formatNaira(freeDeliveryGap)} more for free delivery
               </p>

@@ -19,9 +19,9 @@ const pillars = [
 ]
 
 const toneClasses = {
-  orange: 'bg-orange-50 text-orange-700',
-  emerald: 'bg-emerald-50 text-emerald-700',
-  sky: 'bg-sky-50 text-sky-700',
+  orange: 'bg-orange-50 text-orange-700 dark:bg-orange-900/20 dark:text-orange-400',
+  emerald: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400',
+  sky: 'bg-sky-50 text-sky-700 dark:bg-sky-900/20 dark:text-sky-400',
 }
 
 const testimonials = [
@@ -88,7 +88,7 @@ export default function Home() {
 
       {/* Value & trust pillars */}
       <section className="container-page">
-        <div className="flex items-center gap-1 overflow-x-auto rounded-2xl bg-white p-3 shadow-card no-scrollbar md:grid md:grid-cols-3 md:gap-4 md:overflow-visible">
+        <div className="flex items-center gap-1 overflow-x-auto rounded-2xl bg-surface p-3 shadow-card no-scrollbar md:grid md:grid-cols-3 md:gap-4 md:overflow-visible">
           {pillars.map((pillar, i) => (
             <div key={pillar.title} className="flex min-w-max items-center gap-2 px-2 md:px-3">
               <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${toneClasses[pillar.tone]}`}>
@@ -123,7 +123,7 @@ export default function Home() {
             <Link
               key={category.id}
               to={`/shop?category=${category.id}`}
-              className="flex min-w-max shrink-0 items-center gap-1.5 rounded-full border border-border-default bg-white px-4 py-2 text-label-sm font-medium text-text-secondary shadow-sm transition-colors hover:text-text-primary active:scale-95"
+              className="flex min-w-max shrink-0 items-center gap-1.5 rounded-full border border-border-default bg-surface px-4 py-2 text-label-sm font-medium text-text-secondary shadow-sm transition-colors hover:text-text-primary active:scale-95"
             >
               <CategoryIcon category={category.id} size={14} className="text-primary" />
               {category.name}
@@ -135,7 +135,7 @@ export default function Home() {
       {/* Chef's daily special */}
       {special && (
         <section className="container-page">
-          <div className="relative overflow-hidden rounded-2xl bg-white p-4 shadow-card">
+          <div className="relative overflow-hidden rounded-2xl bg-surface p-4 shadow-card">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-primary" />
@@ -143,7 +143,7 @@ export default function Home() {
                   Chef&apos;s Daily Special
                 </span>
               </div>
-              <span className="flex items-center gap-1 rounded-md bg-orange-50 px-2 py-0.5 text-badge-xs text-orange-800">
+              <span className="flex items-center gap-1 rounded-md bg-orange-50 dark:bg-orange-900/20 px-2 py-0.5 text-badge-xs text-orange-800 dark:text-orange-400">
                 <Timer size={12} aria-hidden="true" />
                 <CountdownTimer className="font-semibold" />
               </span>
@@ -202,7 +202,7 @@ export default function Home() {
 
       {/* Instant kitchen dispatch */}
       <section className="container-page">
-        <div className="flex items-center justify-between gap-3 rounded-2xl bg-orange-50 p-4 shadow-card">
+        <div className="flex items-center justify-between gap-3 rounded-2xl bg-orange-50 dark:bg-orange-900/20 p-4 shadow-card">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-white shadow-sm">
               <Bike size={20} aria-hidden="true" />
@@ -229,11 +229,11 @@ export default function Home() {
         </h2>
         <div className="grid gap-3 md:grid-cols-3 md:gap-5">
           {testimonials.map((t) => (
-            <figure key={t.name} className="flex flex-col gap-3 rounded-2xl bg-white p-5 shadow-card">
+            <figure key={t.name} className="flex flex-col gap-3 rounded-2xl bg-surface p-5 shadow-card">
               <Quote size={20} className="text-primary" aria-hidden="true" />
               <blockquote className="text-body-md text-text-secondary">“{t.quote}”</blockquote>
               <figcaption className="mt-auto flex items-center gap-2.5">
-                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-orange-100 text-label-md font-semibold text-primary">
+                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900/20 text-label-md font-semibold text-primary dark:text-text-primary">
                   {t.name.charAt(0)}
                 </span>
                 <span className="flex flex-col">

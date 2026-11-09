@@ -97,7 +97,7 @@ export default function Collections() {
           <img src={collection.image_url} alt="" className="absolute inset-0 h-full w-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
           <div className="relative z-10 flex max-w-xl flex-col gap-2">
-            <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-badge-xs font-semibold uppercase tracking-wide text-amber-800">
+            <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 dark:bg-amber-900/20 px-2.5 py-0.5 text-badge-xs font-semibold uppercase tracking-wide text-amber-800 dark:text-amber-400">
               Collection
             </span>
             <h1 className="font-display text-hero-mobile text-white md:text-hero">
@@ -108,7 +108,7 @@ export default function Collections() {
         </div>
       </section>
 
-      <section className="sticky top-16 z-30 -mx-4 mb-4 flex flex-col gap-2 border-b border-border-subtle bg-white/95 px-4 py-2.5 backdrop-blur md:-mx-6 md:px-6">
+      <section className="sticky top-16 z-30 -mx-4 mb-4 flex flex-col gap-2 border-b border-border-subtle bg-surface/95 dark:bg-surface/95 px-4 py-2.5 backdrop-blur md:-mx-6 md:px-6">
         <div className="flex items-center gap-2">
           <div className="relative flex flex-1 items-center rounded-xl bg-surface-container-low px-3 py-2 shadow-sm">
             <Search size={18} className="shrink-0 text-text-tertiary" aria-hidden="true" />
@@ -138,7 +138,7 @@ export default function Collections() {
               setPendingPrice(maxPrice)
               setFiltersOpen(true)
             }}
-            className="relative flex h-11 shrink-0 items-center gap-1.5 rounded-xl bg-orange-50 px-3.5 text-label-md text-primary shadow-sm transition-all active:scale-95"
+            className="relative flex h-11 shrink-0 items-center gap-1.5 rounded-xl bg-orange-50 dark:bg-orange-900/20 px-3.5 text-label-md text-primary dark:text-text-primary shadow-sm transition-all active:scale-95"
           >
             <SlidersHorizontal size={17} aria-hidden="true" />
             <span className="hidden font-medium sm:inline">Filters</span>
@@ -201,7 +201,7 @@ export default function Collections() {
               <div className="fixed inset-0 z-10" onClick={() => setSortOpen(false)} aria-hidden="true" />
               <div
                 role="listbox"
-                className="absolute right-0 z-20 mt-1 w-48 rounded-xl bg-white p-1.5 shadow-overlay"
+                className="absolute right-0 z-20 mt-1 w-48 rounded-xl bg-surface p-1.5 shadow-overlay"
                 aria-label="Sort options"
               >
                 {SORTS.map((option) => (
@@ -216,7 +216,7 @@ export default function Collections() {
                     }}
                     className={`w-full rounded-lg px-3 py-2 text-left text-body-sm transition-colors ${
                       sort === option.id
-                        ? 'bg-orange-50 font-semibold text-primary'
+                        ? 'bg-orange-50 dark:bg-orange-900/20 font-semibold text-primary dark:text-text-primary'
                         : 'text-text-secondary hover:bg-surface-container-low'
                     }`}
                   >
@@ -236,11 +236,11 @@ export default function Collections() {
             <Link
               key={c.id}
               to={`/collections/${c.slug}`}
-              className={`shrink-0 rounded-full px-4 py-2 text-label-sm font-medium shadow-sm transition-all active:scale-95 ${
-                active
-                  ? 'bg-primary text-white'
-                  : 'border border-border-default bg-white text-text-secondary hover:text-text-primary'
-              }`}
+               className={`shrink-0 rounded-full px-4 py-2 text-label-sm font-medium shadow-sm transition-all active:scale-95 ${
+                 active
+                   ? 'bg-primary text-white'
+                   : 'border border-border-default bg-surface text-text-secondary hover:text-text-primary'
+               }`}
             >
               {c.name}
             </Link>
@@ -326,9 +326,9 @@ export default function Collections() {
                 return (
                   <label
                     key={tag.id}
-                    className={`flex cursor-pointer items-center gap-1.5 rounded-xl px-3 py-2 text-label-sm shadow-sm transition-colors ${
-                      checked ? 'bg-orange-50 text-primary' : 'bg-surface-container-low text-text-secondary'
-                    }`}
+                     className={`flex cursor-pointer items-center gap-1.5 rounded-xl px-3 py-2 text-label-sm shadow-sm transition-colors ${
+                       checked ? 'bg-orange-50 dark:bg-orange-900/20 text-primary dark:text-text-primary' : 'bg-surface-container-low text-text-secondary'
+                     }`}
                   >
                     <input
                       type="checkbox"

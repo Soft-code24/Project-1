@@ -1,5 +1,5 @@
 const controlBase =
-  'w-full rounded-lg border bg-white px-3.5 py-2 text-body-md text-text-primary placeholder:text-text-tertiary transition-colors focus:outline-none focus:ring-1'
+  'w-full rounded-lg border bg-surface px-3.5 py-2 text-body-md text-text-primary placeholder:text-text-tertiary transition-colors focus:outline-none focus:ring-1'
 
 export const controlClass = (invalid) =>
   `${controlBase} ${invalid ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-border-strong focus:border-primary focus:ring-primary'}`
@@ -25,10 +25,10 @@ export function Field({ label, htmlFor, error, hint, required, children, classNa
 export function EmptyState({ icon: Icon, title, description, action, className = '' }) {
   return (
     <div
-      className={`flex flex-col items-center justify-center rounded-2xl border border-dashed border-border-default bg-white px-6 py-14 text-center ${className}`}
+      className={`flex flex-col items-center justify-center rounded-2xl border border-dashed border-border-default bg-surface px-6 py-14 text-center ${className}`}
     >
       {Icon && (
-        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-orange-50 text-primary">
+        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-orange-50 dark:bg-orange-900/20 text-primary dark:text-text-primary">
           <Icon size={26} aria-hidden="true" />
         </div>
       )}

@@ -37,7 +37,7 @@ export default function About() {
     <div className="pb-8">
       {/* Hero */}
       <section className="container-page pt-5">
-        <div className="relative overflow-hidden rounded-2xl bg-charcoal shadow-card">
+        <div className="relative overflow-hidden rounded-2xl bg-charcoal dark:bg-surface shadow-card">
           <img src={HERO_IMAGE} alt="" className="absolute inset-0 h-full w-full object-cover opacity-50" />
           <div className="absolute inset-0 bg-gradient-to-r from-charcoal via-charcoal/80 to-charcoal/30" />
           <div className="relative flex flex-col gap-3 p-6 md:p-12">
@@ -45,7 +45,7 @@ export default function About() {
             <h1 className="max-w-lg font-display text-hero-mobile text-white md:text-hero">
               Real food, made by real chefs, delivered while it’s still hot.
             </h1>
-            <p className="max-w-md text-body-md text-gray-300 md:text-body-lg">
+            <p className="max-w-md text-body-md text-white dark:text-text-secondary md:text-body-lg">
               SavorBite started in a small Lekki kitchen with one goal: make authentic Nigerian flavors
               available to everyone, in minutes.
             </p>
@@ -57,7 +57,7 @@ export default function About() {
       <section className="container-page py-8">
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-5">
           {stats.map((stat) => (
-            <div key={stat.label} className="rounded-2xl bg-white p-5 text-center shadow-card">
+            <div key={stat.label} className="rounded-2xl bg-surface p-5 text-center shadow-card">
               <stat.icon size={20} className="mx-auto text-primary" aria-hidden="true" />
               <p className="mt-2 font-display text-price-lg font-bold tnum text-text-primary">{stat.value}</p>
               <p className="text-body-sm text-text-secondary">{stat.label}</p>
@@ -68,7 +68,7 @@ export default function About() {
 
       {/* Story */}
       <section className="container-page">
-        <div className="grid gap-6 rounded-2xl border border-border-subtle bg-white p-6 shadow-card md:grid-cols-2 md:p-10">
+        <div className="grid gap-6 rounded-2xl border border-border-subtle bg-surface p-6 shadow-card md:grid-cols-2 md:p-10">
           <div>
             <h2 className="font-display text-headline-lg text-text-primary">Our story</h2>
             <p className="mt-3 text-body-lg text-text-secondary">
@@ -83,7 +83,7 @@ export default function About() {
           <div className="flex flex-col gap-3">
             {values.map((value) => (
               <div key={value.title} className="flex gap-3.5 rounded-xl bg-page-bg p-4">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-orange-50 text-primary">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-orange-50 dark:bg-orange-900/20 text-primary dark:text-text-primary">
                   <value.icon size={18} aria-hidden="true" />
                 </span>
                 <div>

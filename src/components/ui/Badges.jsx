@@ -60,14 +60,14 @@ export function StockBadge({ stock }) {
   }
   if (stock <= 5) {
     return (
-      <Badge className="bg-amber-100 text-amber-800 font-semibold shadow-sm">
-        <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+      <Badge className="bg-amber-100 dark:bg-amber-900/20 text-amber-800 dark:text-amber-400 font-semibold shadow-sm">
+        <span className="h-1.5 w-1.5 rounded-full bg-amber-500 dark:bg-amber-400" />
         Low stock ({stock} left)
       </Badge>
     )
   }
   return (
-    <Badge className="bg-emerald-50 text-emerald-700 shadow-sm">
+    <Badge className="bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 shadow-sm">
       <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" />
       In stock
     </Badge>
@@ -76,7 +76,7 @@ export function StockBadge({ stock }) {
 
 export function PromoTag({ children, icon: Icon }) {
   return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-badge-xs font-semibold uppercase tracking-wide text-amber-800">
+    <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 dark:bg-amber-900/20 px-2.5 py-0.5 text-badge-xs font-semibold uppercase tracking-wide text-amber-800 dark:text-amber-400">
       {Icon && <Icon size={12} aria-hidden="true" />}
       {children}
     </span>
@@ -98,7 +98,7 @@ export function StatusBadge({ status }) {
 export function TagPill({ children, className = '' }) {
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-full border border-border-default bg-white px-3.5 py-1.5 text-label-sm text-text-secondary ${className}`}
+      className={`inline-flex items-center gap-1 rounded-full border border-border-default bg-surface px-3.5 py-1.5 text-label-sm text-text-secondary ${className}`}
     >
       {children}
     </span>

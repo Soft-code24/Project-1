@@ -2,15 +2,91 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ------------------------------------------------------------------ */
+/* Theme tokens — light (:root) and dark (.dark)                      */
+/* All semantic Tailwind colors resolve through these variables, so    */
+/* toggling the .dark class on <html> swaps the whole theme instantly. */
+/* ------------------------------------------------------------------ */
+:root {
+  --color-page-bg: 250 248 245;
+  --color-bg-white: 255 255 255;
+  --color-surface: 255 255 255;
+  --color-surface-dim: 217 218 219;
+  --color-surface-container-lowest: 255 255 255;
+  --color-surface-container-low: 243 244 245;
+  --color-surface-container: 237 238 239;
+  --color-surface-container-high: 231 232 233;
+  --color-surface-container-highest: 225 227 228;
+  --color-on-surface: 25 28 29;
+  --color-on-surface-variant: 89 65 58;
+  --color-outline: 141 113 104;
+  --color-outline-variant: 225 191 181;
+  --color-primary: 201 108 59;
+  --color-primary-hover: 176 90 50;
+  --color-primary-container: 254 243 232;
+  --color-secondary: 22 163 74;
+  --color-secondary-container: 130 245 193;
+  --color-text-primary: 36 36 36;
+  --color-text-secondary: 102 102 102;
+  --color-text-tertiary: 138 138 138;
+  --color-border-subtle: 233 227 220;
+  --color-border-default: 216 206 194;
+  --color-border-strong: 199 188 174;
+  --color-cream: 255 248 235;
+  --color-charcoal: 28 25 23;
+  --color-basil: 22 163 74;
+
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
+}
+
+.dark {
+  --color-page-bg: 23 25 29;
+  --color-bg-white: 38 40 46;
+  --color-surface: 38 40 46;
+  --color-surface-dim: 50 52 59;
+  --color-surface-container-lowest: 38 40 46;
+  --color-surface-container-low: 42 44 51;
+  --color-surface-container: 46 48 55;
+  --color-surface-container-high: 50 52 59;
+  --color-surface-container-highest: 54 56 63;
+  --color-on-surface: 249 244 237;
+  --color-on-surface-variant: 185 180 173;
+  --color-outline: 185 180 173;
+  --color-outline-variant: 56 58 64;
+  --color-primary: 242 166 107;
+  --color-primary-hover: 232 148 92;
+  --color-primary-container: 60 44 28;
+  --color-secondary: 22 163 74;
+  --color-secondary-container: 42 80 50;
+  --color-text-primary: 249 244 237;
+  --color-text-secondary: 185 180 173;
+  --color-text-tertiary: 122 117 110;
+  --color-border-subtle: 56 58 64;
+  --color-border-default: 69 71 77;
+  --color-border-strong: 84 86 93;
+  --color-cream: 42 40 34;
+  --color-charcoal: 42 44 51;
+  --color-basil: 22 163 74;
+}
+
 @layer base {
   html {
     -webkit-text-size-adjust: 100%;
+    /* Prevent theme flash: let inline script set .dark before paint. */
   }
   body {
     @apply bg-page-bg font-body text-body-md text-text-primary antialiased;
+    transition: background-color 200ms ease, color 200ms ease;
   }
   * {
     -webkit-tap-highlight-color: transparent;
+  }
+  /* Respect reduced motion — disable theme transition when requested. */
+  @media (prefers-reduced-motion: reduce) {
+    body {
+      transition: none;
+    }
   }
 }
 

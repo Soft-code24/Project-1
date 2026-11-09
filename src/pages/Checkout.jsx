@@ -122,7 +122,7 @@ export default function Checkout() {
     return (
       <div className="container-page py-10">
         <div className="mx-auto max-w-xl animate-slide-up rounded-2xl border border-border-subtle bg-white p-6 text-center shadow-card sm:p-10">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400">
             <CheckCircle2 size={34} aria-hidden="true" />
           </div>
           <h1 className="mt-5 font-display text-headline-lg text-text-primary">Order confirmed!</h1>
@@ -152,7 +152,7 @@ export default function Checkout() {
 
       <form className="grid gap-6 lg:grid-cols-[7fr_5fr] lg:items-start" onSubmit={handleSubmit} noValidate>
         <div className="flex flex-col gap-5">
-          <section className="rounded-2xl border border-border-subtle bg-white p-5 shadow-card">
+          <section className="rounded-2xl border border-border-subtle bg-surface p-5 shadow-card">
             <h2 className="flex items-center gap-2 font-display text-headline-md text-text-primary">
               <Truck size={18} className="text-primary" aria-hidden="true" />
               Delivery details
@@ -231,7 +231,7 @@ export default function Checkout() {
             </div>
           </section>
 
-          <section className="rounded-2xl border border-border-subtle bg-white p-5 shadow-card">
+          <section className="rounded-2xl border border-border-subtle bg-surface p-5 shadow-card">
             <h2 className="flex items-center gap-2 font-display text-headline-md text-text-primary">
               <CreditCard size={18} className="text-primary" aria-hidden="true" />
               Payment method
@@ -253,8 +253,8 @@ export default function Checkout() {
                     key={option.id}
                     className={`flex cursor-pointer items-center gap-3 rounded-xl border p-3.5 transition-colors ${
                       selected
-                        ? 'border-primary bg-orange-50'
-                        : 'border-border-default bg-white hover:border-border-strong'
+                        ? 'border-primary bg-orange-50 dark:bg-orange-900/20'
+                        : 'border-border-default bg-surface hover:border-border-strong'
                     }`}
                   >
                     <input
@@ -282,7 +282,7 @@ export default function Checkout() {
         </div>
 
         <div className="flex flex-col gap-3 lg:sticky lg:top-24">
-          <div className="rounded-2xl border border-border-subtle bg-white p-5 shadow-card">
+          <div className="rounded-2xl border border-border-subtle bg-surface p-5 shadow-card">
             <h2 className="font-display text-headline-md text-text-primary">Order Summary</h2>
             <dl className="mt-4 flex flex-col gap-2.5 text-body-md">
               <div className="flex justify-between">

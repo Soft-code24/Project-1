@@ -11,7 +11,7 @@ const tabs = [
 export function BottomNav() {
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-50 border-t border-border-subtle bg-white/95 pb-safe shadow-bottomnav backdrop-blur-xl md:hidden"
+      className="fixed inset-x-0 bottom-0 z-50 border-t border-border-subtle bg-surface/95 pb-safe shadow-bottomnav backdrop-blur-xl md:hidden"
       aria-label="Mobile"
     >
       <div className="flex items-center justify-around px-1">

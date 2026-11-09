@@ -22,7 +22,7 @@ export function ProductCard({ product, layout = 'shop' }) {
   }
 
   return (
-    <article className="group relative flex flex-col overflow-hidden rounded-2xl border border-border-subtle bg-white shadow-card transition-shadow hover:shadow-cardHover">
+    <article className="group relative flex flex-col overflow-hidden rounded-2xl border border-border-subtle bg-surface shadow-card transition-shadow hover:shadow-cardHover">
       <Link to={href} className="relative block aspect-[4/3] overflow-hidden bg-surface-container-low">
         <img
           src={product.image}
@@ -39,7 +39,7 @@ export function ProductCard({ product, layout = 'shop' }) {
         aria-label={favorite ? `Remove ${product.name} from favorites` : `Save ${product.name} to favorites`}
         aria-pressed={favorite}
         onClick={() => setFavorite((f) => !f)}
-        className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-white/80 text-text-secondary shadow-sm backdrop-blur transition-colors hover:text-primary active:scale-90"
+        className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-surface/80 text-text-secondary shadow-sm backdrop-blur transition-colors hover:text-primary active:scale-90"
       >
         <Heart size={16} className={favorite ? 'fill-primary text-primary' : ''} aria-hidden="true" />
       </button>

@@ -49,7 +49,7 @@ export default function Auth() {
 
   return (
     <div className="container-page py-8">
-      <div className="grid overflow-hidden rounded-2xl border border-border-subtle bg-white shadow-card lg:grid-cols-2">
+      <div className="grid overflow-hidden rounded-2xl border border-border-subtle bg-surface shadow-card lg:grid-cols-2">
         <div className="p-6 sm:p-10">
           <div className="lg:hidden">
             <SavorBiteLogo className="h-10 w-10" showWordmark />
@@ -79,7 +79,7 @@ export default function Auth() {
                   setError('')
                 }}
                 className={`flex-1 rounded-lg py-2 text-label-md font-medium transition-colors ${
-                  mode === tab.id ? 'bg-white text-text-primary shadow-sm' : 'text-text-secondary hover:text-text-primary'
+                  mode === tab.id ? 'bg-surface text-text-primary shadow-sm' : 'text-text-secondary hover:text-text-primary'
                 }`}
               >
                 {tab.label}
@@ -125,7 +125,7 @@ export default function Auth() {
             </Field>
 
             {error && (
-              <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-body-sm text-red-700">
+              <p role="alert" className="rounded-lg bg-red-50 dark:bg-red-900/20 px-3 py-2 text-body-sm text-red-700 dark:text-red-400">
                 {error}
               </p>
             )}
@@ -168,17 +168,17 @@ export default function Auth() {
             <h2 className="mt-5 font-display text-headline-lg text-white">
               Your next favorite meal is one tap away.
             </h2>
-            <p className="mt-2 max-w-sm text-body-md text-gray-300">
+            <p className="mt-2 max-w-sm text-body-md text-white dark:text-text-secondary">
               Save your details once, reorder your favorites, and track every delivery from kitchen to
               doorstep.
             </p>
             <div className="mt-6 grid grid-cols-2 gap-3">
               {perks.map((perk) => (
-                <div key={perk.title} className="flex items-center gap-2.5 rounded-xl bg-white/10 p-3 backdrop-blur">
+                <div key={perk.title} className="flex items-center gap-2.5 rounded-xl bg-white/10 dark:bg-text-primary/10 p-3 backdrop-blur">
                   <perk.icon size={18} className="shrink-0 text-primary" aria-hidden="true" />
                   <div>
                     <p className="text-label-sm font-semibold text-white">{perk.title}</p>
-                    <p className="text-body-sm text-gray-400">{perk.text}</p>
+                    <p className="text-body-sm text-white/80 dark:text-text-tertiary">{perk.text}</p>
                   </div>
                 </div>
               ))}

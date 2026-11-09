@@ -1,0 +1,43 @@
+# Supabase configuration for SavorBite
+# Docs: https://supabase.com/docs/guides/local-development/cli/config
+
+project_id = "savorbite"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+shadow_port = 54320
+major_version = 15
+
+[studio]
+enabled = true
+port = 54323
+
+[storage]
+enabled = true
+file_size_limit = "5MiB"
+
+[auth]
+enabled = true
+site_url = "http://localhost:5173"
+additional_redirect_urls = ["https://localhost:5173"]
+jwt_expiry = 3600
+enable_refresh_token_rotation = true
+enable_signup = true
+
+[auth.email]
+enable_signup = true
+# Development only — require confirmed emails in production
+enable_confirmations = false
+
+[auth.sms]
+enable_signup = false
+
+[analytics]
+enabled = false
