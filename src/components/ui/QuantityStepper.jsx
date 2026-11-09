@@ -4,11 +4,11 @@ export function QuantityStepper({ value, onChange, min = 1, max = 99, label = 'q
   const btnSize = size === 'sm' ? 'h-7 w-7' : 'h-8 w-8'
   const iconSize = size === 'sm' ? 13 : 15
   return (
-    <div className="inline-flex items-center rounded-md border border-border-default bg-white p-0.5 shadow-sm">
+    <div className="inline-flex items-center rounded-md border border-border-default bg-surface p-0.5 shadow-sm">
       <button
         type="button"
         aria-label={`Decrease ${label}`}
-        className={`${btnSize} flex items-center justify-center rounded text-text-secondary transition-colors hover:bg-gray-100 active:bg-gray-200 disabled:opacity-40`}
+        className={`${btnSize} flex items-center justify-center rounded text-text-secondary transition-colors hover:bg-surface-container-low active:bg-surface-container disabled:opacity-40`}
         disabled={value <= min}
         onClick={() => onChange(Math.max(min, value - 1))}
       >
@@ -23,7 +23,7 @@ export function QuantityStepper({ value, onChange, min = 1, max = 99, label = 'q
       <button
         type="button"
         aria-label={`Increase ${label}`}
-        className={`${btnSize} flex items-center justify-center rounded text-text-secondary transition-colors hover:bg-gray-100 active:bg-gray-200 disabled:opacity-40`}
+        className={`${btnSize} flex items-center justify-center rounded text-text-secondary transition-colors hover:bg-surface-container-low active:bg-surface-container disabled:opacity-40`}
         disabled={value >= max}
         onClick={() => onChange(Math.min(max, value + 1))}
       >

@@ -44,7 +44,7 @@ export default function Contact() {
 
       <div className="grid gap-6 lg:grid-cols-[7fr_5fr] lg:items-start">
         {/* Form */}
-        <section className="rounded-2xl border border-border-subtle bg-white p-5 shadow-card sm:p-6">
+        <section className="rounded-2xl border border-border-subtle bg-surface p-5 shadow-card sm:p-6">
           <h2 className="flex items-center gap-2 font-display text-headline-md text-text-primary">
             <MessageSquare size={18} className="text-primary" aria-hidden="true" />
             Send a message
@@ -115,7 +115,7 @@ export default function Contact() {
         {/* Info */}
         <div className="flex flex-col gap-3">
           {contactCards.map((card) => (
-            <div key={card.title} className="rounded-2xl border border-border-subtle bg-white p-5 shadow-card">
+            <div key={card.title} className="rounded-2xl border border-border-subtle bg-surface p-5 shadow-card">
               <div className="flex items-center gap-3">
                 <span className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-50 text-primary">
                   <card.icon size={18} aria-hidden="true" />
@@ -134,7 +134,7 @@ export default function Contact() {
 
           <div className="relative overflow-hidden rounded-2xl bg-surface-container p-0 shadow-card">
             <div
-              className="flex h-40 flex-col items-center justify-center gap-2 bg-surface-container"
+              className="flex h-40 flex-col items-center justify-center gap-2 bg-surface-container dark:bg-surface-container-high"
               style={{
                 backgroundImage:
                   'repeating-linear-gradient(45deg, #edeeef 0 12px, #e7e8e9 12px 24px)',
@@ -150,7 +150,7 @@ export default function Contact() {
 
           <div className="rounded-2xl bg-charcoal p-5 text-white">
             <h2 className="font-display text-headline-sm">Bulk and catering orders</h2>
-            <p className="mt-1.5 text-body-md text-gray-300">
+            <p className="mt-1.5 text-body-md text-text-tertiary">
               Feeding a team or hosting an event? Email us for custom menus and pricing.
             </p>
             <a

@@ -79,8 +79,8 @@ export default function OrderConfirmation() {
 
   return (
     <div className="container-page py-10">
-      <div className="mx-auto max-w-xl animate-slide-up rounded-2xl border border-border-subtle bg-white p-6 text-center shadow-card sm:p-10">
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
+      <div className="mx-auto max-w-xl animate-slide-up rounded-2xl border border-border-subtle bg-surface p-6 text-center shadow-card sm:p-10">
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400">
           <CheckCircle2 size={34} aria-hidden="true" />
         </div>
         <h1 className="mt-5 font-display text-headline-lg text-text-primary">Order confirmed!</h1>

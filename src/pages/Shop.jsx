@@ -85,7 +85,7 @@ export default function Shop() {
   return (
     <div className="container-page py-4 pb-6">
       {/* Sticky search & filter toolbar */}
-      <section className="sticky top-16 z-30 -mx-4 mb-4 flex flex-col gap-2 border-b border-border-subtle bg-white/95 px-4 py-2.5 backdrop-blur md:-mx-6 md:px-6">
+      <section className="sticky top-16 z-30 -mx-4 mb-4 flex flex-col gap-2 border-b border-border-subtle bg-surface/95 px-4 py-2.5 backdrop-blur md:-mx-6 md:px-6">
         <div className="flex items-center gap-2">
           <div className="relative flex flex-1 items-center rounded-xl bg-surface-container-low px-3 py-2 shadow-sm">
             <Search size={18} className="shrink-0 text-text-tertiary" aria-hidden="true" />
@@ -179,7 +179,7 @@ export default function Shop() {
               <div className="fixed inset-0 z-10" onClick={() => setSortOpen(false)} aria-hidden="true" />
               <div
                 role="listbox"
-                className="absolute right-0 z-20 mt-1 w-48 rounded-xl bg-white p-1.5 shadow-overlay"
+                className="absolute right-0 z-20 mt-1 w-48 rounded-xl bg-surface p-1.5 shadow-overlay"
                 aria-label="Sort options"
               >
                 {SORTS.map((option) => (
@@ -219,7 +219,7 @@ export default function Shop() {
               className={`shrink-0 rounded-full px-4 py-2 text-label-sm font-medium shadow-sm transition-all active:scale-95 ${
                 active
                   ? 'bg-primary text-white'
-                  : 'border border-border-default bg-white text-text-secondary hover:text-text-primary'
+                  : 'border border-border-default bg-surface text-text-secondary hover:text-text-primary'
               }`}
             >
               {category.name}

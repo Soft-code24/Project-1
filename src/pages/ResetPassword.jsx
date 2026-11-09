@@ -53,8 +53,8 @@ export default function ResetPassword() {
   if (done) {
     return (
       <div className="container-page py-10">
-        <div className="mx-auto max-w-md animate-slide-up rounded-2xl border border-border-subtle bg-white p-6 text-center shadow-card sm:p-10">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
+        <div className="mx-auto max-w-md animate-slide-up rounded-2xl border border-border-subtle bg-surface p-6 text-center shadow-card sm:p-10">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400">
             <CheckCircle2 size={34} aria-hidden="true" />
           </div>
           <h1 className="mt-5 font-display text-headline-lg text-text-primary">Password reset</h1>
@@ -73,8 +73,8 @@ export default function ResetPassword() {
   if (errors.token) {
     return (
       <div className="container-page py-10">
-        <div className="mx-auto max-w-md rounded-2xl border border-border-subtle bg-white p-6 text-center shadow-card sm:p-10">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-red-50 text-red-600">
+        <div className="mx-auto max-w-md rounded-2xl border border-border-subtle bg-surface p-6 text-center shadow-card sm:p-10">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400">
             <Lock size={34} aria-hidden="true" />
           </div>
           <h1 className="mt-5 font-display text-headline-lg text-text-primary">Invalid reset link</h1>

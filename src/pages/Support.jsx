@@ -83,7 +83,7 @@ export default function Support() {
   if (sent) {
     return (
       <div className="container-page py-10">
-        <div className="mx-auto max-w-md animate-slide-up rounded-2xl border border-border-subtle bg-white p-6 text-center shadow-card sm:p-10">
+        <div className="mx-auto max-w-md animate-slide-up rounded-2xl border border-border-subtle bg-surface p-6 text-center shadow-card sm:p-10">
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
             <Ticket size={34} aria-hidden="true" />
           </div>
@@ -113,7 +113,7 @@ export default function Support() {
 
       <div className="grid gap-6 lg:grid-cols-[7fr_5fr] lg:items-start">
         {/* Support form */}
-        <section className="rounded-2xl border border-border-subtle bg-white p-5 shadow-card sm:p-6">
+        <section className="rounded-2xl border border-border-subtle bg-surface p-5 shadow-card sm:p-6">
           <h2 className="flex items-center gap-2 font-display text-headline-md text-text-primary">
             <HelpCircle size={18} className="text-primary" aria-hidden="true" />
             Send a message
@@ -177,7 +177,7 @@ export default function Support() {
 
         {/* Contact info + FAQ */}
         <div className="flex flex-col gap-5">
-          <div className="rounded-2xl border border-border-subtle bg-white p-5 shadow-card">
+          <div className="rounded-2xl border border-border-subtle bg-surface p-5 shadow-card">
             <h2 className="flex items-center gap-2 font-display text-headline-md text-text-primary">
               <HelpCircle size={18} className="text-primary" aria-hidden="true" />
               Get in touch
@@ -237,7 +237,7 @@ export default function Support() {
             </ul>
           </div>
 
-          <div className="rounded-2xl border border-border-subtle bg-white p-5 shadow-card">
+          <div className="rounded-2xl border border-border-subtle bg-surface p-5 shadow-card">
             <h2 className="font-display text-headline-md text-text-primary">FAQ</h2>
             <ul className="mt-4 flex flex-col gap-2">
               {faqs.map((faq, i) => {
