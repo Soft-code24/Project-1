@@ -24,6 +24,7 @@ import { StockBadge, TagPill } from '../components/ui/Badges.jsx'
 import { EmptyState } from '../components/ui/Form.jsx'
 import { Rating } from '../components/Rating.jsx'
 import { ProductCard } from '../components/ProductCard.jsx'
+import { SEO } from '../components/SEO.jsx'
 
 export default function ProductDetail() {
   const { id } = useParams()
@@ -36,6 +37,8 @@ export default function ProductDetail() {
 
   if (!product) {
     return (
+      <>
+      <SEO title="Dish not found | SavorBite" />
       <div className="container-page py-16">
         <EmptyState
           icon={Utensils}
@@ -44,6 +47,7 @@ export default function ProductDetail() {
           action={<Button to="/shop">Browse the menu</Button>}
         />
       </div>
+    </>
     )
   }
 
@@ -57,6 +61,13 @@ export default function ProductDetail() {
   }
 
   return (
+    <>
+    <SEO
+      title={`${product.name} | SavorBite`}
+      description={product.short}
+      image={product.image}
+      path={`/products/${product.slug}`}
+    />
     <div className="container-page py-4 pb-28 md:pb-10">
       {/* Breadcrumb */}
       <nav aria-label="Breadcrumb" className="mb-4 flex items-center gap-1.5 text-body-sm text-text-secondary">
@@ -234,5 +245,6 @@ export default function ProductDetail() {
         </div>
       )}
     </div>
+    </>
   )
 }

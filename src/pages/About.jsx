@@ -3,6 +3,7 @@ import { ArrowRight, ChefHat, Clock, Heart, Leaf, PackageCheck, Users } from 'lu
 import { SavorBiteLogo } from '../components/Logo.jsx'
 import { Button } from '../components/ui/Button.jsx'
 import { HERO_IMAGE } from '../data/site.js'
+import { SEO } from '../components/SEO.jsx'
 
 const stats = [
   { value: '12k+', label: 'Meals delivered', icon: PackageCheck },
@@ -31,6 +32,8 @@ const values = [
 
 export default function About() {
   return (
+    <>
+    <SEO title="About SavorBite | Our Story" description="About SavorBite — fresh Nigerian meals made by real chefs, delivered fast in Lagos." path="/about" />
     <div className="pb-8">
       {/* Hero */}
       <section className="container-page pt-5">
@@ -107,5 +110,6 @@ export default function About() {
         </div>
       </section>
     </div>
+    </>
   )
 }

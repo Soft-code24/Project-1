@@ -1,7 +1,7 @@
 import { Link, NavLink } from 'react-router-dom'
-import { MapPin, Search, ShoppingBag, User } from 'lucide-react'
+import { MapPin, Search, User } from 'lucide-react'
 import { SavorBiteLogo } from './Logo.jsx'
-import { useCart } from '../context/CartContext.jsx'
+import { MiniCart } from './MiniCart.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
 import { FEATURED_LINKS } from '../data/site.js'
 
@@ -11,7 +11,6 @@ const navLinkClass = ({ isActive }) =>
   }`
 
 export function Header() {
-  const { totalItems } = useCart()
   const { user } = useAuth()
 
   return (
@@ -47,21 +46,7 @@ export function Header() {
             <Search size={20} aria-hidden="true" />
           </Link>
 
-          <Link
-            to="/cart"
-            aria-label={`Cart, ${totalItems} item${totalItems === 1 ? '' : 's'}`}
-            className="relative flex h-11 items-center gap-2 rounded-full px-2.5 text-text-secondary transition-colors hover:bg-surface-container hover:text-text-primary"
-          >
-            <span className="relative">
-              <ShoppingBag size={20} aria-hidden="true" />
-              {totalItems > 0 && (
-                <span className="tnum absolute -right-2 -top-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold text-white">
-                  {totalItems}
-                </span>
-              )}
-            </span>
-            <span className="hidden text-label-md md:inline">Cart</span>
-          </Link>
+          <MiniCart />
 
           <Link
             to="/account"

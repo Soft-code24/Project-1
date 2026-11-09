@@ -149,7 +149,7 @@ export default function Contact() {
           </div>
 
           <div className="rounded-2xl bg-charcoal p-5 text-white">
-            <h2 className="font-display text-headline-sm">Bulk & catering orders</h2>
+            <h2 className="font-display text-headline-sm">Bulk and catering orders</h2>
             <p className="mt-1.5 text-body-md text-gray-300">
               Feeding a team or hosting an event? Email us for custom menus and pricing.
             </p>
@@ -160,9 +160,9 @@ export default function Contact() {
               <Mail size={15} aria-hidden="true" />
               {BUSINESS.email}
             </a>
-          </div>
         </div>
       </div>
     </div>
+  </div>
   )
 }

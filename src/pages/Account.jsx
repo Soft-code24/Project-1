@@ -11,9 +11,17 @@ const menuLinks = [
 ]
 
 export default function Account() {
-  const { user, logout } = useAuth()
+  const { user, logout, isLoading } = useAuth()
   const { showToast } = useToast()
   const navigate = useNavigate()
+
+  if (isLoading) {
+    return (
+      <div className="container-page py-20 flex items-center justify-center">
+        <p className="text-body-md text-text-secondary">Loading account…</p>
+      </div>
+    )
+  }
 
   if (!user) {
     return (
@@ -24,8 +32,8 @@ export default function Account() {
           description="Log in or create an account to sync your cart, track orders, and check out faster."
           action={
             <div className="flex flex-col gap-2 sm:flex-row">
-              <Button to="/login">Log in</Button>
-              <Button to="/register" variant="secondary">
+              <Button to="/login?next=/account">Log in</Button>
+              <Button to="/register?next=/account" variant="secondary">
                 Create account
               </Button>
             </div>

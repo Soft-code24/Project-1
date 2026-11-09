@@ -12,6 +12,13 @@ const exploreLinks = [
   { label: 'My account', to: '/account' },
 ]
 
+const legalLinks = [
+  { label: 'Privacy Policy', to: '/privacy' },
+  { label: 'Terms of Service', to: '/terms' },
+  { label: 'Refund & Cancellation', to: '/refunds' },
+  { label: 'Delivery Policy', to: '/delivery' },
+]
+
 export function Footer() {
   return (
     <footer className="mt-8 hidden bg-charcoal text-gray-300 md:block">
@@ -78,14 +85,6 @@ export function Footer() {
               </span>
             </li>
           </ul>
-        </div>
-
-        <div>
-          <h3 className="font-display text-headline-sm text-white">Kitchen hours</h3>
-          <p className="mt-4 text-body-md text-gray-400">
-            The kitchen accepts orders while stock lasts. Delivery is currently available within Lekki,
-            Victoria Island and Ikoyi.
-          </p>
           <div className="mt-5 rounded-xl border border-white/10 bg-white/5 p-4">
             <p className="text-label-md text-white">Payments accepted</p>
             <p className="mt-1 text-body-sm text-gray-400">Paystack · Flutterwave · Cash on delivery</p>
@@ -96,6 +95,22 @@ export function Footer() {
               Admin dashboard →
             </Link>
           </div>
+        </div>
+
+        <div>
+          <h3 className="font-display text-headline-sm text-white">Legal</h3>
+          <ul className="mt-4 flex flex-col gap-2.5">
+            {legalLinks.map((link) => (
+              <li key={link.label}>
+                <Link
+                  to={link.to}
+                  className="text-body-md text-gray-400 transition-colors hover:text-white"
+                >
+                  {link.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
       <div className="border-t border-white/10">

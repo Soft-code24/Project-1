@@ -10,6 +10,7 @@ import { Button } from '../components/ui/Button.jsx'
 import { CategoryIcon, PromoTag } from '../components/ui/Badges.jsx'
 import { CountdownTimer } from '../components/CountdownTimer.jsx'
 import { ProductCard } from '../components/ProductCard.jsx'
+import { SEO } from '../components/SEO.jsx'
 
 const pillars = [
   { icon: Zap, tone: 'orange', title: '30-min Delivery', sub: 'Hot to your doorstep' },
@@ -58,6 +59,13 @@ export default function Home() {
   }
 
   return (
+    <>
+    <SEO
+      title="SavorBite — Fresh Nigerian Meals Delivered in Lagos"
+      description="Freshly crafted Nigerian meals — firewood jollof, suya, grilled steaks and more — delivered to your door in Lagos in under 30 minutes."
+      image={HERO_IMAGE}
+      path="/"
+    />
     <div className="flex flex-col gap-2 pb-6">
       {/* Promotional hero banner */}
       <section className="container-page pt-4">
@@ -238,5 +246,6 @@ export default function Home() {
         </div>
       </section>
     </div>
+    </>
   )
 }

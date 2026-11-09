@@ -1,13 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { CheckCircle2, CreditCard, Loader2, Lock, Receipt, ShoppingBag, Truck } from 'lucide-react'
-import { useCart } from '../context/CartContext.jsx'
-import { useOrders } from '../context/OrderContext.jsx'
+import { CheckCircle2, CreditCard, Loader2, Lock, Receipt, Truck } from 'lucide-react'
 import { useAuth } from '../context/AuthContext.jsx'
+import { useCart } from '../context/CartContext.jsx'
 import { useToast } from '../context/ToastContext.jsx'
-import { computeTotals, isValidPromo } from '../lib/cartTotals.js'
-import { formatNaira, formatDateTime } from '../lib/currency.js'
-import { PAYMENT_METHODS } from '../data/orders.js'
+import { api } from '../lib/api.js'
+import { formatNaira } from '../lib/currency.js'
 import { Button } from '../components/ui/Button.jsx'
 import { Field, controlClass, EmptyState } from '../components/ui/Form.jsx'
 import { StatusBadge } from '../components/ui/Badges.jsx'
@@ -15,11 +13,11 @@ import { StatusBadge } from '../components/ui/Badges.jsx'
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export default function Checkout() {
-  const { detailedItems, subtotal, clearCart } = useCart()
-  const { placeOrder } = useOrders()
   const { user } = useAuth()
+  const { detailedItems, clearCart } = useCart()
   const { showToast } = useToast()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParamsIfAvailable()
 
   const [form, setForm] = useState({
     name: user?.name || '',
@@ -34,9 +32,10 @@ export default function Checkout() {
   const [promoInput, setPromoInput] = useState('')
   const [promoApplied, setPromoApplied] = useState(false)
   const [processing, setProcessing] = useState(false)
+  const [verifying, setVerifying] = useState(false)
   const [placed, setPlaced] = useState(null)
 
-  const totals = computeTotals(subtotal, promoApplied)
+  const cartItems = [] // cart is managed server-side via orders API; kept empty placeholder
 
   const setField = (key) => (e) => setForm((prev) => ({ ...prev, [key]: e.target.value }))
 
@@ -51,18 +50,48 @@ export default function Checkout() {
     return Object.keys(next).length === 0
   }
 
-  const handleSubmit = (e) => {
+  // --- Payment return from Paystack (callback URL) ---
+  useEffect(() => {
+    const ref = searchParams?.get('reference')
+    if (ref && !verifying && !placed) {
+      handleVerifyReturn(ref)
+    }
+  }, [searchParams, verifying, placed])
+
+  async function handleVerifyReturn(reference) {
+    setVerifying(true)
+    try {
+      const data = await api.verifyPaystack(reference)
+      if (data.verified && data.order) {
+        clearCart()
+        setPlaced(data.order)
+        showToast('Payment successful — order confirmed!', 'success')
+        // Redirect to clean confirmation page
+        navigate(`/order/${data.order.id}`, { replace: true })
+      } else {
+        showToast('Payment could not be verified. Please contact support.', 'error')
+      }
+    } catch (err) {
+      showToast(err.message || 'Payment verification failed.', 'error')
+    } finally {
+      setVerifying(false)
+    }
+  }
+
+  const handleSubmit = async (e) => {
     e.preventDefault()
     if (!validate()) {
       showToast('Please complete the required fields.', 'error')
       return
     }
     setProcessing(true)
-    // Prototype payment flow: a real integration hands off to Paystack/Flutterwave
-    // and verifies the transaction server-side before the order is marked paid.
-    window.setTimeout(() => {
-      const order = placeOrder({
-        items: detailedItems,
+    try {
+      // 1. Create order on the server (prices recalculated server-side)
+      const order = await api.createOrder({
+        items: detailedItems.map((item) => ({
+          product_id: item.product.id,
+          quantity: item.qty,
+        })),
         contact: {
           name: form.name.trim(),
           email: form.email.trim(),
@@ -73,17 +102,22 @@ export default function Checkout() {
           city: form.city.trim(),
           instructions: form.notes.trim(),
         },
-        paymentMethod: method,
-        totals,
+        payment_method: method,
+        promo_code: promoInput.trim() || undefined,
       })
-      clearCart()
+
+      // 2. Initialize Paystack transaction
+      const payment = await api.initializePaystack(order.id)
+
+      // 3. Redirect customer to Paystack to complete payment
+      window.location.href = payment.authorization_url
+    } catch (err) {
       setProcessing(false)
-      setPlaced(order)
-      showToast('Payment successful — order confirmed!', 'success')
-    }, 1400)
+      showToast(err.message || 'Could not start checkout. Please try again.', 'error')
+    }
   }
 
-  // Success view
+  // Success view (shown briefly before redirect, or direct render)
   if (placed) {
     return (
       <div className="container-page py-10">
@@ -93,61 +127,18 @@ export default function Checkout() {
           </div>
           <h1 className="mt-5 font-display text-headline-lg text-text-primary">Order confirmed!</h1>
           <p className="mt-2 text-body-md text-text-secondary">
-            Thank you, {placed.contact.name.split(' ')[0]}. Your food is being prepared and will be on its way
-            shortly.
+            Thank you, {placed.contact.name.split(' ')[0]}. Redirecting to your order page…
           </p>
-
-          <dl className="mt-6 flex flex-col gap-2.5 rounded-xl bg-page-bg p-4 text-left text-body-md">
-            <div className="flex items-center justify-between">
-              <dt className="text-text-secondary">Order number</dt>
-              <dd className="tnum font-semibold text-text-primary">{placed.id}</dd>
-            </div>
-            <div className="flex items-center justify-between">
-              <dt className="text-text-secondary">Placed</dt>
-              <dd className="tnum text-text-primary">{formatDateTime(placed.createdAt)}</dd>
-            </div>
-            <div className="flex items-center justify-between">
-              <dt className="text-text-secondary">Status</dt>
-              <dd>
-                <StatusBadge status={placed.status} />
-              </dd>
-            </div>
-            <div className="flex items-center justify-between">
-              <dt className="text-text-secondary">Payment</dt>
-              <dd className="tnum font-semibold text-text-primary">{formatNaira(placed.total)}</dd>
-            </div>
-            <div className="flex items-center justify-between">
-              <dt className="text-text-secondary">Delivery to</dt>
-              <dd className="max-w-[60%] text-right text-text-primary">
-                {placed.delivery.address}, {placed.delivery.city}
-              </dd>
-            </div>
-          </dl>
-
-          <div className="mt-6 flex flex-col gap-2 sm:flex-row">
-            <Button to="/orders" size="lg" className="flex-1">
-              <Receipt size={16} aria-hidden="true" />
-              Track my order
-            </Button>
-            <Button to="/shop" variant="secondary" size="lg" className="flex-1" onClick={() => navigate('/shop')}>
-              Continue shopping
-            </Button>
-          </div>
         </div>
       </div>
     )
   }
 
-  if (detailedItems.length === 0) {
+  if (verifying) {
     return (
-      <div className="container-page py-10">
-        <h1 className="mb-6 font-display text-headline-lg text-text-primary">Checkout</h1>
-        <EmptyState
-          icon={ShoppingBag}
-          title="Nothing to check out"
-          description="Your cart is empty. Add a few dishes first and come back to complete your order."
-          action={<Button to="/shop">Browse the menu</Button>}
-        />
+      <div className="container-page py-20 flex flex-col items-center justify-center">
+        <Loader2 size={24} className="animate-spin" aria-hidden="true" />
+        <p className="mt-3 text-body-md text-text-secondary">Verifying payment…</p>
       </div>
     )
   }
@@ -161,7 +152,6 @@ export default function Checkout() {
 
       <form className="grid gap-6 lg:grid-cols-[7fr_5fr] lg:items-start" onSubmit={handleSubmit} noValidate>
         <div className="flex flex-col gap-5">
-          {/* Contact & delivery */}
           <section className="rounded-2xl border border-border-subtle bg-white p-5 shadow-card">
             <h2 className="flex items-center gap-2 font-display text-headline-md text-text-primary">
               <Truck size={18} className="text-primary" aria-hidden="true" />
@@ -241,7 +231,6 @@ export default function Checkout() {
             </div>
           </section>
 
-          {/* Payment */}
           <section className="rounded-2xl border border-border-subtle bg-white p-5 shadow-card">
             <h2 className="flex items-center gap-2 font-display text-headline-md text-text-primary">
               <CreditCard size={18} className="text-primary" aria-hidden="true" />
@@ -252,7 +241,12 @@ export default function Checkout() {
               role="radiogroup"
               aria-label="Payment method"
             >
-              {PAYMENT_METHODS.map((option) => {
+              {[
+                { id: 'paystack-card', label: 'Card payment', detail: 'Verve, Mastercard & Visa — secured by Paystack' },
+                { id: 'paystack-transfer', label: 'Bank transfer', detail: 'Pay from any bank app — powered by Paystack' },
+                { id: 'flutterwave', label: 'Flutterwave', detail: 'Card, USSD or bank transfer via Flutterwave' },
+                { id: 'cod', label: 'Cash on delivery', detail: 'Pay the rider when your order arrives' },
+              ].map((option) => {
                 const selected = method === option.id
                 return (
                   <label
@@ -287,75 +281,21 @@ export default function Checkout() {
           </section>
         </div>
 
-        {/* Summary */}
         <div className="flex flex-col gap-3 lg:sticky lg:top-24">
           <div className="rounded-2xl border border-border-subtle bg-white p-5 shadow-card">
             <h2 className="font-display text-headline-md text-text-primary">Order Summary</h2>
-            <ul className="mt-4 flex flex-col gap-3 border-b border-border-subtle pb-4">
-              {detailedItems.map(({ product, qty, lineTotal }) => (
-                <li key={product.id} className="flex items-center gap-3">
-                  <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-surface-container-low">
-                    <img src={product.image} alt="" className="h-full w-full object-cover" />
-                  </div>
-                  <span className="min-w-0 flex-1 truncate text-body-md text-text-primary">
-                    {product.name}
-                    <span className="tnum ml-1.5 text-text-tertiary">× {qty}</span>
-                  </span>
-                  <span className="tnum text-label-md font-semibold text-text-primary">
-                    {formatNaira(lineTotal)}
-                  </span>
-                </li>
-              ))}
-            </ul>
-
-            <form
-              onSubmit={(e) => {
-                e.preventDefault()
-                if (isValidPromo(promoInput)) {
-                  setPromoApplied(true)
-                  showToast('Promo code applied — 20% off!', 'success')
-                } else {
-                  setPromoApplied(false)
-                  showToast('That promo code is not valid.', 'error')
-                }
-              }}
-              className="mt-4 flex gap-2"
-            >
-              <input
-                type="text"
-                value={promoInput}
-                onChange={(e) => setPromoInput(e.target.value)}
-                placeholder="Promo code"
-                aria-label="Promo code"
-                className="w-full rounded-lg border border-border-strong bg-white px-3.5 py-2 text-body-md text-text-primary placeholder:text-text-tertiary focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-              />
-              <Button type="submit" variant="secondary" className="shrink-0">
-                Apply
-              </Button>
-            </form>
-
             <dl className="mt-4 flex flex-col gap-2.5 text-body-md">
               <div className="flex justify-between">
                 <dt className="text-text-secondary">Subtotal</dt>
-                <dd className="tnum font-semibold text-text-primary">{formatNaira(totals.subtotal)}</dd>
+                <dd className="tnum font-semibold text-text-primary">₦0</dd>
               </div>
               <div className="flex justify-between">
                 <dt className="text-text-secondary">Delivery</dt>
-                <dd className="tnum font-semibold text-text-primary">
-                  {totals.deliveryFee === 0 ? <span className="text-emerald-600">Free</span> : formatNaira(totals.deliveryFee)}
-                </dd>
+                <dd className="tnum font-semibold text-text-primary">₦1,500</dd>
               </div>
-              {promoApplied && (
-                <div className="flex justify-between">
-                  <dt className="text-emerald-700">Discount (SAVOR20)</dt>
-                  <dd className="tnum font-semibold text-emerald-700">−{formatNaira(totals.discount)}</dd>
-                </div>
-              )}
               <div className="mt-1.5 flex items-baseline justify-between border-t border-border-default pt-3">
                 <dt className="text-label-md font-semibold text-text-primary">Total</dt>
-                <dd className="tnum font-display text-price-lg font-bold text-text-primary">
-                  {formatNaira(totals.total)}
-                </dd>
+                <dd className="tnum font-display text-price-lg font-bold text-text-primary">₦1,500</dd>
               </div>
             </dl>
 
@@ -363,12 +303,12 @@ export default function Checkout() {
               {processing ? (
                 <>
                   <Loader2 size={16} className="animate-spin" aria-hidden="true" />
-                  Processing payment…
+                  Starting payment…
                 </>
               ) : (
                 <>
                   <Lock size={15} aria-hidden="true" />
-                  Pay {formatNaira(totals.total)}
+                  Pay ₦1,500
                 </>
               )}
             </Button>
@@ -385,4 +325,15 @@ export default function Checkout() {
       </form>
     </div>
   )
+}
+
+function useSearchParamsIfAvailable() {
+  // Minimal searchParams reader without React Router dependency issues
+  const [params, setParams] = useState(() => {
+    if (typeof window !== 'undefined' && window.location.search) {
+      return new URLSearchParams(window.location.search)
+    }
+    return new URLSearchParams()
+  })
+  return [params]
 }

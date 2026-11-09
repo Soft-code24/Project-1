@@ -20,7 +20,7 @@ export default function Auth() {
   const navigate = useNavigate()
   const params = new URLSearchParams(location.search)
   const next = params.get('next') || '/'
-  const initialMode = location.pathname === '/register' ? 'register' : 'login'
+  const initialMode = location.pathname === '/signup' || location.pathname === '/register' ? 'register' : 'login'
 
   const { login, register, loginAsDemoCustomer } = useAuth()
   const { showToast } = useToast()
@@ -32,25 +32,24 @@ export default function Auth() {
 
   const setField = (key) => (e) => setForm((prev) => ({ ...prev, [key]: e.target.value }))
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
     setSubmitting(true)
     const result =
-      mode === 'login' ? login(form.email, form.password) : register(form.name, form.email, form.password)
+      mode === 'login' ? await login(form.email, form.password) : await register(form.name, form.email, form.password)
     setSubmitting(false)
     if (!result.ok) {
       setError(result.error)
       return
     }
-    showToast(mode === 'login' ? `Welcome back, ${result.user.name.split(' ')[0]}!` : 'Account created — welcome to SavorBite!', 'success')
+    showToast(mode === 'login' ? `Welcome back, ${result.user.fullName || result.user.email.split(' ')[0]}!` : 'Account created — welcome to SavorBite!', 'success')
     navigate(next, { replace: true })
   }
 
   return (
     <div className="container-page py-8">
       <div className="grid overflow-hidden rounded-2xl border border-border-subtle bg-white shadow-card lg:grid-cols-2">
-        {/* Form side */}
         <div className="p-6 sm:p-10">
           <div className="lg:hidden">
             <SavorBiteLogo className="h-10 w-10" showWordmark />
@@ -143,8 +142,8 @@ export default function Auth() {
             </p>
             <Button
               variant="secondary"
-              onClick={() => {
-                loginAsDemoCustomer()
+              onClick={async () => {
+                await loginAsDemoCustomer()
                 showToast('Logged in as demo customer', 'success')
                 navigate(next, { replace: true })
               }}
@@ -152,16 +151,15 @@ export default function Auth() {
               Continue as demo customer
             </Button>
             <p className="text-body-sm text-text-tertiary">
-              Administrators can{' '}
-              <Link to="/admin/login" className="font-medium text-primary hover:underline">
-                log in to the dashboard
+              Forgot your password?{' '}
+              <Link to="/forgot-password" className="font-medium text-primary hover:underline">
+                Reset it
               </Link>
               .
             </p>
           </div>
         </div>
 
-        {/* Brand side */}
         <div className="relative hidden bg-charcoal lg:block">
           <img src={HERO_IMAGE} alt="" className="absolute inset-0 h-full w-full object-cover opacity-60" />
           <div className="absolute inset-0 bg-gradient-to-t from-charcoal via-charcoal/70 to-charcoal/30" />

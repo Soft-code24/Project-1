@@ -1,79 +1,135 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
-import { ADMIN_CREDENTIALS } from '../data/site.js'
+import { supabase, isSupabaseConfigured } from '../lib/supabase.js'
 
 const AuthContext = createContext(null)
-const STORAGE_KEY = 'savorbite.auth.v1'
 
-function loadAuth() {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY)
-    if (saved) return JSON.parse(saved)
-  } catch {
-    // ignore malformed storage
+const emptyUser = null
+
+function profileToUser(profile) {
+  return {
+    id: profile.id,
+    email: profile.email,
+    fullName: profile.full_name,
+    role: profile.role,
   }
-  return null
+}
+
+async function fetchProfile(userId) {
+  if (!supabase) return null
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id, email, full_name, phone, role')
+    .eq('id', userId)
+    .single()
+  if (error || !data) return null
+  return profileToUser(data)
 }
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(loadAuth)
+  const [user, setUser] = useState(emptyUser)
+  const [loading, setLoading] = useState(true)
 
+  // Restore session on load and listen for auth changes.
   useEffect(() => {
+    if (!supabase) {
+      setLoading(false)
+      return
+    }
+    async function init() {
+      try {
+        const { data, error } = await supabase.auth.getUser()
+        if (error || !data.user) {
+          setLoading(false)
+          return
+        }
+        const profile = await fetchProfile(data.user.id)
+        setUser(profile || { id: data.user.id, email: data.user.email, fullName: '', role: 'customer' })
+      } catch (err) {
+        console.error('Auth init error:', err)
+      } finally {
+        setLoading(false)
+      }
+
+      const { data: sub } = supabase.auth.onAuthStateChange(async (event, session) => {
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+          if (session?.user) {
+            const profile = await fetchProfile(session.user.id)
+            setUser(profile || { id: session.user.id, email: session.user.email, fullName: '', role: 'customer' })
+          }
+        } else if (event === 'SIGNED_OUT') {
+          setUser(emptyUser)
+        }
+      })
+      return () => sub.unsubscribe()
+    }
+    init()
+  }, [])
+
+  const setField = (key) => (e) => setForm((prev) => ({ ...prev, [key]: e.target.value }))
+  const [form, setForm] = useState({ name: '', email: '', password: '' })
+
+  const login = async (email, password) => {
+    if (!supabase) return { ok: false, error: 'Supabase is not configured on the frontend.' }
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+    if (error || !data.user) return { ok: false, error: error?.message || 'Invalid email or password.' }
+    const profile = await fetchProfile(data.user.id)
+    setUser(profile || { id: data.user.id, email, fullName: '', role: 'customer' })
+    return { ok: true, user: profile || { id: data.user.id, email, fullName: '', role: 'customer' } }
+  }
+
+  const register = async (name, email, password) => {
+    if (!supabase) return { ok: false, error: 'Supabase is not configured on the frontend.' }
+    if (!name || name.trim().length < 2) return { ok: false, error: 'Enter your full name.' }
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { full_name: name.trim() } },
+    })
+    if (error) return { ok: false, error: error.message }
+    if (!data.user) return { ok: false, error: 'Could not create account.' }
+    // Profile row is created by the database trigger; fetch it.
+    const profile = await fetchProfile(data.user.id)
+    setUser(profile || { id: data.user.id, email, fullName: name.trim(), role: 'customer' })
+    return { ok: true, user: profile || { id: data.user.id, email, fullName: name.trim(), role: 'customer' } }
+  }
+
+  const loginAsDemoCustomer = async () => {
+    if (!supabase) {
+      // Fallback when Supabase isn't configured: keep a local demo user.
+      const demoUser = { id: 'demo', email: 'demo@savorbite.ng', fullName: 'Demo Customer', role: 'customer' }
+      setUser(demoUser)
+      return demoUser
+    }
     try {
-      if (user) localStorage.setItem(STORAGE_KEY, JSON.stringify(user))
-      else localStorage.removeItem(STORAGE_KEY)
-    } catch {
-      // storage may be unavailable
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: 'demo@savorbite.ng',
+        password: 'Demo@1234',
+      })
+      if (error || !data.user) throw new Error(error?.message || 'Demo account not available.')
+      const profile = await fetchProfile(data.user.id)
+      setUser(profile || { id: data.user.id, email: 'demo@savorbite.ng', fullName: 'Demo Customer', role: 'customer' })
+      return profile || { id: data.user.id, email: 'demo@savorbite.ng', fullName: 'Demo Customer', role: 'customer' }
+    } catch (err) {
+      const demoUser = { id: 'demo', email: 'demo@savorbite.ng', fullName: 'Demo Customer', role: 'customer' }
+      setUser(demoUser)
+      return demoUser
     }
-  }, [user])
+  }
 
-  const value = useMemo(() => {
-    const login = (email, password) => {
-      // Prototype auth: validates shape only. Admin credentials unlock the dashboard.
-      const normalized = (email || '').trim().toLowerCase()
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized)) {
-        return { ok: false, error: 'Enter a valid email address.' }
-      }
-      if (!password || password.length < 6) {
-        return { ok: false, error: 'Password must be at least 6 characters.' }
-      }
-      if (normalized === ADMIN_CREDENTIALS.email && password === ADMIN_CREDENTIALS.password) {
-        const adminUser = { name: 'SavorBite Admin', email: normalized, role: 'admin' }
-        setUser(adminUser)
-        return { ok: true, user: adminUser }
-      }
-      const customer = {
-        name: normalized.split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
-        email: normalized,
-        role: 'customer',
-      }
-      setUser(customer)
-      return { ok: true, user: customer }
-    }
+  const logout = async () => {
+    if (supabase) await supabase.auth.signOut()
+    setUser(emptyUser)
+  }
 
-    const register = (name, email, password) => {
-      const normalized = (email || '').trim().toLowerCase()
-      if (!name || name.trim().length < 2) return { ok: false, error: 'Enter your full name.' }
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized)) {
-        return { ok: false, error: 'Enter a valid email address.' }
-      }
-      if (!password || password.length < 6) {
-        return { ok: false, error: 'Password must be at least 6 characters.' }
-      }
-      const customer = { name: name.trim(), email: normalized, role: 'customer' }
-      setUser(customer)
-      return { ok: true, user: customer }
-    }
-
-    const loginAsDemoCustomer = () => {
-      const customer = { name: 'Adaeze Okafor', email: 'adaeze@example.com', role: 'customer' }
-      setUser(customer)
-      return customer
-    }
-
-    const logout = () => setUser(null)
-
-    return { user, isAdmin: user?.role === 'admin', login, register, loginAsDemoCustomer, logout }
-  }, [user])
+  const value = useMemo(() => ({
+    user,
+    isAdmin: user?.role === 'admin',
+    isLoading: loading,
+    login,
+    register,
+    loginAsDemoCustomer,
+    logout,
+  }), [user, loading])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

@@ -3,13 +3,24 @@ import { CustomerLayout } from './components/CustomerLayout.jsx'
 import Home from './pages/Home.jsx'
 import Shop from './pages/Shop.jsx'
 import ProductDetail from './pages/ProductDetail.jsx'
+import Collections from './pages/Collections.jsx'
 import Cart from './pages/Cart.jsx'
 import Checkout from './pages/Checkout.jsx'
 import Auth from './pages/Auth.jsx'
+import OrderConfirmation from './pages/OrderConfirmation.jsx'
+import ForgotPassword from './pages/ForgotPassword.jsx'
+import ResetPassword from './pages/ResetPassword.jsx'
 import Orders from './pages/Orders.jsx'
 import About from './pages/About.jsx'
 import Contact from './pages/Contact.jsx'
 import Account from './pages/Account.jsx'
+import Support from './pages/Support.jsx'
+import Blog from './pages/Blog.jsx'
+import BlogPost from './pages/BlogPost.jsx'
+import Privacy from './pages/Privacy.jsx'
+import Terms from './pages/Terms.jsx'
+import Refunds from './pages/Refunds.jsx'
+import Delivery from './pages/Delivery.jsx'
 import NotFound from './pages/NotFound.jsx'
 import { AdminLayout } from './admin/AdminLayout.jsx'
 import AdminLogin from './admin/AdminLogin.jsx'
@@ -24,15 +35,28 @@ export default function App() {
       <Route element={<CustomerLayout />}>
         <Route path="/" element={<Home />} />
         <Route path="/shop" element={<Shop />} />
+        <Route path="/collections/:slug" element={<Collections />} />
+        <Route path="/products/:slug" element={<ProductDetail />} />
         <Route path="/product/:id" element={<ProductDetail />} />
         <Route path="/cart" element={<Cart />} />
         <Route path="/checkout" element={<Checkout />} />
         <Route path="/login" element={<Auth />} />
         <Route path="/register" element={<Auth />} />
+        <Route path="/signup" element={<Auth />} />
+        <Route path="/order/:id" element={<OrderConfirmation />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/orders" element={<Orders />} />
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/account" element={<Account />} />
+        <Route path="/support" element={<Support />} />
+        <Route path="/blog" element={<Blog />} />
+        <Route path="/blog/:slug" element={<BlogPost />} />
+        <Route path="/privacy" element={<Privacy />} />
+        <Route path="/terms" element={<Terms />} />
+        <Route path="/refunds" element={<Refunds />} />
+        <Route path="/delivery" element={<Delivery />} />
         <Route path="*" element={<NotFound />} />
       </Route>
 
