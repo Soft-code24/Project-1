@@ -1,38 +1,57 @@
 import { useState } from 'react'
 import { Clock, Mail, MapPin, MessageSquare, Phone, Send } from 'lucide-react'
-import { BUSINESS } from '../data/site.js'
+import { useBusinessSettings } from '../context/BusinessSettingsContext.jsx'
 import { useToast } from '../context/ToastContext.jsx'
 import { Button } from '../components/ui/Button.jsx'
 import { Field, controlClass } from '../components/ui/Form.jsx'
+import { api } from '../lib/api.js'
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
-const contactCards = [
-  { icon: MapPin, title: 'Visit us', lines: [BUSINESS.address] },
-  { icon: Phone, title: 'Call us', lines: [BUSINESS.phone, BUSINESS.email] },
-  { icon: Clock, title: 'Opening hours', lines: BUSINESS.hours.map((h) => `${h.day}: ${h.time}`) },
-]
-
 export default function Contact() {
   const { showToast } = useToast()
+  const { settings } = useBusinessSettings()
+  const address = settings?.address || '24 Admiralty Way, Lekki Phase 1, Lagos, Nigeria'
+  const phone = settings?.contact_phone || '+234 801 234 5678'
+  const email = settings?.contact_email || 'hello@savorbite.ng'
+  const emailHref = settings?.contact_email ? `mailto:${settings.contact_email}` : 'mailto:hello@savorbite.ng'
+  const hours = settings?.hours || []
+
+  const contactCards = [
+    { icon: MapPin, title: 'Visit us', lines: [address] },
+    { icon: Phone, title: 'Call us', lines: [phone, email] },
+    { icon: Clock, title: 'Opening hours', lines: hours.map((h) => `${h.day}: ${h.time}`) },
+  ]
+
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' })
   const [errors, setErrors] = useState({})
   const [sent, setSent] = useState(false)
 
   const setField = (key) => (e) => setForm((prev) => ({ ...prev, [key]: e.target.value }))
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     const next = {}
     if (!form.name.trim()) next.name = 'Enter your name.'
     if (!emailPattern.test(form.email.trim())) next.email = 'Enter a valid email address.'
+    if (!form.subject.trim()) next.subject = 'Enter a subject.'
     if (!form.message.trim() || form.message.trim().length < 10)
       next.message = 'Tell us a little more (10+ characters).'
     setErrors(next)
     if (Object.keys(next).length > 0) return
-    setSent(true)
-    setForm({ name: '', email: '', subject: '', message: '' })
-    showToast('Message sent — we will reply shortly!', 'success')
+    try {
+      await api.createTicket({
+        name: form.name.trim(),
+        email: form.email.trim(),
+        subject: form.subject.trim(),
+        message: form.message.trim(),
+      })
+      setSent(true)
+      setForm({ name: '', email: '', subject: '', message: '' })
+      showToast('Message sent — we will reply shortly!', 'success')
+    } catch (err) {
+      showToast(err.message || 'Could not send message. Please try again.', 'error')
+    }
   }
 
   return (
@@ -154,11 +173,11 @@ export default function Contact() {
               Feeding a team or hosting an event? Email us for custom menus and pricing.
             </p>
             <a
-              href={BUSINESS.emailHref}
+              href={emailHref}
               className="mt-3 inline-flex items-center gap-1.5 text-label-md font-semibold text-primary hover:text-orange-400"
             >
               <Mail size={15} aria-hidden="true" />
-              {BUSINESS.email}
+              {email}
             </a>
         </div>
       </div>

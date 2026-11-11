@@ -11,5 +11,6 @@ const router = Router()
 router.post('/', requireAuth, orderLimiter, createOrderValidators, validate, orderController.createOrder)
 router.get('/', requireAuth, orderController.listMyOrders)
 router.get('/:id', requireAuth, orderIdValidators, validate, orderController.getMyOrder)
+router.post('/:id/cancel', requireAuth, orderIdValidators, validate, orderController.cancelOrder)
 
 export default router

@@ -1,7 +1,18 @@
-import jwt from 'jsonwebtoken'
+import { createRemoteJWKSet, jwtVerify } from 'jose'
 import env from '../config/env.js'
 import { supabaseAdmin } from '../config/supabase.js'
 import { ApiError, asyncHandler } from '../utils/ApiError.js'
+
+// JWKS endpoint for Supabase Auth JWT verification.
+// Supabase publishes the public signing keys at /auth/v1/.well-known/jwks.json.
+// This supports ES256, RS256, and other algorithms Supabase may use — no shared
+// secret is required on the backend.
+const JWKS = createRemoteJWKSet(
+  new URL(`${env.supabase.url}/auth/v1/.well-known/jwks.json`),
+)
+
+const JWT_ISSUER = `${env.supabase.url}/auth/v1`
+const JWT_AUDIENCE = 'authenticated'
 
 function extractToken(req) {
   const header = req.headers.authorization || ''
@@ -10,16 +21,20 @@ function extractToken(req) {
   return token
 }
 
-// Verifies the Supabase access token and attaches the user to the request.
-// Profile (incl. role) is loaded server-side with the service-role client so
-// the role can never be spoofed by the client.
+// Verifies the Supabase access token using JWKS and attaches the user to the
+// request. Profile (incl. role) is loaded server-side with the service-role
+// client so the role can never be spoofed by the client.
 export const requireAuth = asyncHandler(async (req, res, next) => {
   const token = extractToken(req)
   if (!token) throw ApiError.unauthorized('Missing bearer token')
 
   let payload
   try {
-    payload = jwt.verify(token, env.supabase.jwtSecret, { algorithms: ['HS256'] })
+    const { payload: verifiedPayload } = await jwtVerify(token, JWKS, {
+      issuer: JWT_ISSUER,
+      audience: JWT_AUDIENCE,
+    })
+    payload = verifiedPayload
   } catch {
     throw ApiError.unauthorized('Invalid or expired token')
   }
@@ -56,11 +71,14 @@ export const optionalAuth = asyncHandler(async (req, res, next) => {
   const token = extractToken(req)
   if (!token) return next()
   try {
-    const payload = jwt.verify(token, env.supabase.jwtSecret, { algorithms: ['HS256'] })
+    const { payload: verifiedPayload } = await jwtVerify(token, JWKS, {
+      issuer: JWT_ISSUER,
+      audience: JWT_AUDIENCE,
+    })
     const { data: profile } = await supabaseAdmin
       .from('profiles')
       .select('id, email, full_name, role')
-      .eq('id', payload.sub)
+      .eq('id', verifiedPayload.sub)
       .single()
     if (profile) {
       req.user = {

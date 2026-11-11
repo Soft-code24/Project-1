@@ -1,23 +1,51 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { CheckCircle2, CreditCard, Loader2, Lock, Receipt, Truck } from 'lucide-react'
+import { CheckCircle2, CreditCard, Loader2, Lock, Receipt, Truck, X } from 'lucide-react'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useCart } from '../context/CartContext.jsx'
+import { useBusinessSettings } from '../context/BusinessSettingsContext.jsx'
 import { useToast } from '../context/ToastContext.jsx'
 import { api } from '../lib/api.js'
 import { formatNaira } from '../lib/currency.js'
+import { computeTotals, isValidPromo } from '../lib/cartTotals.js'
+import { FEATURES } from '../lib/featureFlags.js'
 import { Button } from '../components/ui/Button.jsx'
 import { Field, controlClass, EmptyState } from '../components/ui/Form.jsx'
 import { StatusBadge } from '../components/ui/Badges.jsx'
 
-const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const emailPattern = /^[^\s@]+@\S+\.\S+$/
 
 export default function Checkout() {
-  const { user } = useAuth()
-  const { detailedItems, clearCart } = useCart()
+  const { user, isLoading } = useAuth()
+  const { detailedItems, subtotal, clearCart } = useCart()
+  const { settings } = useBusinessSettings()
   const { showToast } = useToast()
   const navigate = useNavigate()
   const [searchParams] = useSearchParamsIfAvailable()
+
+  // Checkout attempt ID — stable across retries of the same attempt,
+  // regenerated for a new purchase. Stored in sessionStorage so a page
+  // reload during retry doesn't lose it.
+  const [attemptId, setAttemptId] = useState(null)
+  useEffect(() => {
+    let stored = sessionStorage.getItem('savorbite:checkout:attemptId')
+    if (!stored) {
+      stored = crypto.randomUUID()
+      sessionStorage.setItem('savorbite:checkout:attemptId', stored)
+    }
+    setAttemptId(stored)
+  }, [])
+
+  // Clear the attempt when the cart changes (new purchase)
+  useEffect(() => {
+    if (detailedItems.length > 0) {
+      // Cart has items — keep current attempt
+      return
+    }
+    // Cart emptied — next checkout starts a fresh attempt
+    sessionStorage.removeItem('savorbite:checkout:attemptId')
+    setAttemptId(null)
+  }, [detailedItems.length])
 
   const [form, setForm] = useState({
     name: user?.name || '',
@@ -28,14 +56,65 @@ export default function Checkout() {
     notes: '',
   })
   const [errors, setErrors] = useState({})
-  const [method, setMethod] = useState('paystack-card')
+  const [method, setMethod] = useState('cod')
   const [promoInput, setPromoInput] = useState('')
   const [promoApplied, setPromoApplied] = useState(false)
+  const [promoCode, setPromoCode] = useState('')
+  const [promoDiscount, setPromoDiscount] = useState(0)
+  const [promoError, setPromoError] = useState('')
+  const [promoValidating, setPromoValidating] = useState(false)
   const [processing, setProcessing] = useState(false)
+  const [submitted, setSubmitted] = useState(false)
   const [verifying, setVerifying] = useState(false)
   const [placed, setPlaced] = useState(null)
 
-  const cartItems = [] // cart is managed server-side via orders API; kept empty placeholder
+  // Online payments require configured provider keys. Staging has no real
+  // Paystack/Flutterwave credentials, so only Cash on delivery is available.
+  const isOnlinePaymentAvailable = Boolean(import.meta.env.VITE_PAYSTACK_PUBLIC_KEY)
+
+  // --- Payment return from Paystack (callback URL) ---
+  useEffect(() => {
+    const ref = searchParams?.get('reference')
+    if (ref && !verifying && !placed) {
+      handleVerifyReturn(ref)
+    }
+  }, [searchParams, verifying, placed])
+
+  const deliveryFee = settings?.delivery_fee ?? 1500
+  const freeDeliveryThreshold = settings?.free_delivery_threshold ?? 20000
+
+  // Revalidate coupon when cart contents change (items OR quantities)
+  const cartHash = JSON.stringify(detailedItems.map((i) => ({ id: i.product.id, qty: i.qty })))
+  useEffect(() => {
+    if (promoCode && FEATURES.couponValidation) {
+      // Cart changed — clear applied promo until revalidated
+      setPromoApplied(false)
+      setPromoDiscount(0)
+      setPromoError('')
+    }
+  }, [cartHash, promoCode])
+
+  const useCouponValidation = FEATURES.couponValidation
+
+  const totals = computeTotals(subtotal, promoApplied, { deliveryFee, freeDeliveryThreshold })
+
+  // When using API validation, use the actual discount from the server
+  const effectiveDiscount = useCouponValidation ? promoDiscount : totals.discount
+  const effectiveTotal = subtotal + totals.deliveryFee - effectiveDiscount
+  const freeDeliveryGap = Math.max(0, freeDeliveryThreshold - subtotal)
+
+  if (isLoading) {
+    return (
+      <div className="container-page py-20 flex items-center justify-center">
+        <p className="text-body-md text-text-secondary">Loading session…</p>
+      </div>
+    )
+  }
+
+  if (!user) {
+    navigate('/login?next=/checkout', { replace: true })
+    return null
+  }
 
   const setField = (key) => (e) => setForm((prev) => ({ ...prev, [key]: e.target.value }))
 
@@ -48,6 +127,63 @@ export default function Checkout() {
     if (!form.city.trim()) next.city = 'Enter your city or area.'
     setErrors(next)
     return Object.keys(next).length === 0
+  }
+
+  const removePromo = () => {
+    setPromoInput('')
+    setPromoCode('')
+    setPromoApplied(false)
+    setPromoDiscount(0)
+    setPromoError('')
+  }
+
+  const applyPromo = async (e) => {
+    e.preventDefault()
+    const code = promoInput.trim()
+    if (!code) return
+
+    if (!FEATURES.couponValidation) {
+      // Legacy SAVOR20 path
+      if (isValidPromo(code)) {
+        setPromoCode(code)
+        setPromoApplied(true)
+        setPromoError('')
+        showToast('Promo code applied — 20% off!', 'success')
+      } else {
+        setPromoApplied(false)
+        setPromoError('That promo code is not valid.')
+        showToast('That promo code is not valid.', 'error')
+      }
+      return
+    }
+
+    // New API validation path
+    setPromoValidating(true)
+    setPromoError('')
+    try {
+      const items = detailedItems.map((item) => ({
+        product_id: item.product.id,
+        quantity: item.qty,
+      }))
+      const data = await api.validateCoupon(code, items)
+      if (data.valid) {
+        setPromoCode(code)
+        setPromoDiscount(data.discount)
+        setPromoApplied(true)
+        setPromoError('')
+        showToast(data.message || 'Coupon applied.', 'success')
+      } else {
+        setPromoApplied(false)
+        setPromoError(data.message || 'That coupon is not valid.')
+        showToast(data.message || 'That coupon is not valid.', 'error')
+      }
+    } catch (err) {
+      setPromoApplied(false)
+      setPromoError(err.message || 'Coupon validation failed.')
+      showToast(err.message || 'Coupon validation failed.', 'error')
+    } finally {
+      setPromoValidating(false)
+    }
   }
 
   // --- Payment return from Paystack (callback URL) ---
@@ -66,7 +202,6 @@ export default function Checkout() {
         clearCart()
         setPlaced(data.order)
         showToast('Payment successful — order confirmed!', 'success')
-        // Redirect to clean confirmation page
         navigate(`/order/${data.order.id}`, { replace: true })
       } else {
         showToast('Payment could not be verified. Please contact support.', 'error')
@@ -84,7 +219,9 @@ export default function Checkout() {
       showToast('Please complete the required fields.', 'error')
       return
     }
+    if (processing || submitted) return
     setProcessing(true)
+    setSubmitted(true)
     try {
       // 1. Create order on the server (prices recalculated server-side)
       const order = await api.createOrder({
@@ -103,17 +240,26 @@ export default function Checkout() {
           instructions: form.notes.trim(),
         },
         payment_method: method,
-        promo_code: promoInput.trim() || undefined,
+        promo_code: promoCode || undefined,
+        idempotencyKey: attemptId,
       })
 
-      // 2. Initialize Paystack transaction
-      const payment = await api.initializePaystack(order.id)
+      // 2. Cash on delivery: no payment redirect — order is placed immediately
+      if (method === 'cod') {
+        clearCart()
+        setPlaced(order.order)
+        showToast('Order placed successfully — pay the rider on delivery.', 'success')
+        navigate(`/order/${order.order.id}`, { replace: true })
+        return
+      }
 
-      // 3. Redirect customer to Paystack to complete payment
+      // 3. Online payments: initialize Paystack and redirect customer to pay
+      const payment = await api.initializePaystack(order.id)
       window.location.href = payment.authorization_url
     } catch (err) {
       setProcessing(false)
-      showToast(err.message || 'Could not start checkout. Please try again.', 'error')
+      setSubmitted(false)
+      showToast(err.message || 'Could not place order. Please try again.', 'error')
     }
   }
 
@@ -242,10 +388,14 @@ export default function Checkout() {
               aria-label="Payment method"
             >
               {[
-                { id: 'paystack-card', label: 'Card payment', detail: 'Verve, Mastercard & Visa — secured by Paystack' },
-                { id: 'paystack-transfer', label: 'Bank transfer', detail: 'Pay from any bank app — powered by Paystack' },
-                { id: 'flutterwave', label: 'Flutterwave', detail: 'Card, USSD or bank transfer via Flutterwave' },
                 { id: 'cod', label: 'Cash on delivery', detail: 'Pay the rider when your order arrives' },
+                ...(isOnlinePaymentAvailable
+                  ? [
+                      { id: 'paystack-card', label: 'Card payment', detail: 'Verve, Mastercard & Visa — secured by Paystack' },
+                      { id: 'paystack-transfer', label: 'Bank transfer', detail: 'Pay from any bank app — powered by Paystack' },
+                      { id: 'flutterwave', label: 'Flutterwave', detail: 'Card, USSD or bank transfer via Flutterwave' },
+                    ]
+                  : []),
               ].map((option) => {
                 const selected = method === option.id
                 return (
@@ -273,42 +423,137 @@ export default function Checkout() {
                 )
               })}
             </div>
-            <p className="mt-3 flex items-center gap-1.5 text-body-sm text-text-tertiary">
-              <Lock size={13} aria-hidden="true" />
-              Your payment details are encrypted and processed securely. Card and transfer payments are
-              verified before the kitchen accepts the order.
-            </p>
+            {method !== 'cod' && (
+              <p className="mt-3 flex items-center gap-1.5 text-body-sm text-text-tertiary">
+                <Lock size={13} aria-hidden="true" />
+                Your payment details are encrypted and processed securely. Card and transfer payments are
+                verified before the kitchen accepts the order.
+              </p>
+            )}
+            {!isOnlinePaymentAvailable && (
+              <p className="mt-3 flex items-center gap-1.5 rounded-lg bg-amber-50 dark:bg-amber-900/20 px-3 py-2 text-body-sm text-amber-700 dark:text-amber-400">
+                <Lock size={13} aria-hidden="true" />
+                Online payments are not available in staging. Cash on delivery is the only payment method.
+              </p>
+            )}
           </section>
-        </div>
 
-        <div className="flex flex-col gap-3 lg:sticky lg:top-24">
-          <div className="rounded-2xl border border-border-subtle bg-surface p-5 shadow-card">
+          <section className="rounded-2xl border border-border-subtle bg-surface p-5 shadow-card">
             <h2 className="font-display text-headline-md text-text-primary">Order Summary</h2>
-            <dl className="mt-4 flex flex-col gap-2.5 text-body-md">
+            <div className="mt-4 flex gap-2">
+              <input
+                type="text"
+                value={promoInput}
+                onChange={(e) => setPromoInput(e.target.value)}
+                placeholder="Promo code (e.g. SAVOR20)"
+                aria-label="Promo code"
+                className="w-full rounded-lg border border-border-strong bg-surface px-3.5 py-2 text-body-md text-text-primary placeholder:text-text-secondary focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                disabled={promoValidating}
+              />
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={applyPromo}
+                disabled={promoValidating || !promoInput.trim()}
+                className="shrink-0"
+              >
+                {promoValidating ? (
+                  <span className="flex items-center gap-2">
+                    <Loader2 size={14} className="animate-spin" aria-hidden="true" />
+                    Applying…
+                  </span>
+                ) : (
+                  'Apply'
+                )}
+              </Button>
+              {promoError && (
+                <span className="ml-3 flex items-center gap-1 text-xs text-red-600 dark:text-red-400">
+                  <X size={12} aria-hidden="true" />
+                  {promoError}
+                </span>
+              )}
+            </div>
+            <ul className="mt-4 flex flex-col gap-3">
+              {detailedItems.map(({ product, qty, lineTotal }) => (
+                <li key={product.id} className="flex items-center gap-3">
+                  <div className="h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-surface-container-low">
+                    <img src={product.image} alt={product.alt} className="h-full w-full object-cover" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-body-md text-text-primary">{product.name}</p>
+                    <p className="tnum text-body-sm text-text-secondary">
+                      {formatNaira(product.price)} × {qty}
+                    </p>
+                  </div>
+                  <span className="tnum text-label-md font-semibold text-text-primary">
+                    {formatNaira(lineTotal)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+            <dl className="mt-4 flex flex-col gap-2.5 border-t border-border-default pt-4 text-body-md">
               <div className="flex justify-between">
                 <dt className="text-text-secondary">Subtotal</dt>
-                <dd className="tnum font-semibold text-text-primary">₦0</dd>
+                <dd className="tnum font-semibold text-text-primary">{formatNaira(subtotal)}</dd>
               </div>
               <div className="flex justify-between">
                 <dt className="text-text-secondary">Delivery</dt>
-                <dd className="tnum font-semibold text-text-primary">₦1,500</dd>
+                <dd className="tnum font-semibold text-text-primary">
+                  {totals.deliveryFee === 0 ? (
+                    <span className="text-emerald-600 dark:text-emerald-400">Free</span>
+                  ) : (
+                    formatNaira(totals.deliveryFee)
+                  )}
+                </dd>
               </div>
-              <div className="mt-1.5 flex items-baseline justify-between border-t border-border-default pt-3">
+              {promoApplied && (
+                <div className="flex justify-between">
+                  <dt className="text-emerald-700 dark:text-emerald-400">
+                    Discount ({promoCode || 'Promo'})
+                  </dt>
+                  <dd className="tnum font-semibold text-emerald-700 dark:text-emerald-400">
+                    −{formatNaira(effectiveDiscount)}
+                  </dd>
+                </div>
+              )}
+              {promoApplied && (
+                <button
+                  type="button"
+                  onClick={removePromo}
+                  className="flex items-center gap-1 text-xs text-red-600 dark:text-red-400 hover:underline"
+                >
+                  <X size={12} aria-hidden="true" />
+                  Remove
+                </button>
+              )}
+              <div className="mt-1.5 flex justify-between border-t border-border-default pt-3">
                 <dt className="text-label-md font-semibold text-text-primary">Total</dt>
-                <dd className="tnum font-display text-price-lg font-bold text-text-primary">₦1,500</dd>
+                <dd className="tnum font-display text-price-lg font-bold text-text-primary">
+                  {formatNaira(effectiveTotal)}
+                </dd>
               </div>
             </dl>
-
-            <Button type="submit" size="lg" className="mt-5 w-full" disabled={processing}>
+            {freeDeliveryGap > 0 && (
+              <p className="mt-3 flex items-center gap-1.5 rounded-lg bg-orange-50 dark:bg-orange-900/20 px-3 py-2 text-body-sm text-orange-700 dark:text-orange-400">
+                <Truck size={14} aria-hidden="true" />
+                Add {formatNaira(freeDeliveryGap)} more for free delivery
+              </p>
+            )}
+            <Button type="submit" size="lg" className="mt-5 w-full" disabled={processing || !detailedItems.length}>
               {processing ? (
                 <>
                   <Loader2 size={16} className="animate-spin" aria-hidden="true" />
-                  Starting payment…
+                  Placing order…
+                </>
+              ) : method === 'cod' ? (
+                <>
+                  <Truck size={15} aria-hidden="true" />
+                  Place order — pay on delivery
                 </>
               ) : (
                 <>
                   <Lock size={15} aria-hidden="true" />
-                  Pay ₦1,500
+                  Pay {formatNaira(effectiveTotal)}
                 </>
               )}
             </Button>
@@ -320,7 +565,7 @@ export default function Checkout() {
                 for faster checkout and order history.
               </p>
             )}
-          </div>
+          </section>
         </div>
       </form>
     </div>
@@ -328,7 +573,6 @@ export default function Checkout() {
 }
 
 function useSearchParamsIfAvailable() {
-  // Minimal searchParams reader without React Router dependency issues
   const [params, setParams] = useState(() => {
     if (typeof window !== 'undefined' && window.location.search) {
       return new URLSearchParams(window.location.search)

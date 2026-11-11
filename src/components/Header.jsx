@@ -4,6 +4,7 @@ import { SavorBiteLogo } from './Logo.jsx'
 import { MiniCart } from './MiniCart.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useTheme } from '../context/ThemeContext.jsx'
+import { useBusinessSettings } from '../context/BusinessSettingsContext.jsx'
 import { FEATURED_LINKS } from '../data/site.js'
 
 const navLinkClass = ({ isActive }) =>
@@ -16,7 +17,10 @@ const navLinkClass = ({ isActive }) =>
 export function Header() {
   const { user } = useAuth()
   const { setTheme } = useTheme()
+  const { settings } = useBusinessSettings()
   const isDark = document.documentElement.classList.contains('dark')
+  const name = settings?.restaurant_name || 'SavorBite'
+  const city = settings?.city || 'Lagos, NG'
 
   return (
     <header className="sticky top-0 z-50 border-b border-border-subtle bg-surface/90 pt-safe backdrop-blur-xl">
@@ -24,12 +28,15 @@ export function Header() {
         <Link to="/" className="flex min-w-0 items-center gap-2">
           <SavorBiteLogo className="h-8 w-8 shrink-0" />
           <div className="flex min-w-0 flex-col">
-            <span className="font-display text-headline-sm leading-none tracking-tight text-text-primary">
-              SavorBite
+            <span
+              className="font-display text-headline-sm leading-none tracking-tight"
+              style={{ color: settings?.primary_color }}
+            >
+              {name}
             </span>
             <span className="mt-0.5 flex items-center gap-1 text-label-sm text-text-secondary">
               <MapPin size={11} className="text-primary" aria-hidden="true" />
-              Lagos, NG
+              {city}
             </span>
           </div>
         </Link>
@@ -68,7 +75,7 @@ export function Header() {
 
           <Link
             to="/account"
-            aria-label={user ? `Account: ${user.name}` : 'Account'}
+            aria-label={user ? `Account: ${user.name || 'User'}` : 'Account'}
             className="flex h-11 w-11 items-center justify-center rounded-full bg-primary text-white shadow-sm transition-transform active:scale-95"
           >
             <User size={18} aria-hidden="true" />

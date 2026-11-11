@@ -27,6 +27,15 @@ import AdminLogin from './admin/AdminLogin.jsx'
 import AdminOverview from './admin/AdminOverview.jsx'
 import AdminProducts from './admin/AdminProducts.jsx'
 import AdminOrders from './admin/AdminOrders.jsx'
+import AdminCategories from './admin/AdminCategories.jsx'
+import AdminCustomers from './admin/AdminCustomers.jsx'
+import AdminCustomerDetail from './admin/AdminCustomerDetail.jsx'
+import AdminCustomerAnalytics from './admin/AdminCustomerAnalytics.jsx'
+import AdminCoupons from './admin/AdminCoupons.jsx'
+import AdminSettings from './admin/AdminSettings.jsx'
+
+// Dev-only coupon validation tester — never exposed in production.
+import CouponValidateTest from './pages/CouponValidateTest.jsx'
 
 export default function App() {
   return (
@@ -58,6 +67,9 @@ export default function App() {
         <Route path="/refunds" element={<Refunds />} />
         <Route path="/delivery" element={<Delivery />} />
         <Route path="*" element={<NotFound />} />
+        {import.meta.env.DEV && (
+          <Route path="/dev/coupon-test" element={<CouponValidateTest />} />
+        )}
       </Route>
 
       {/* Admin dashboard */}
@@ -65,6 +77,12 @@ export default function App() {
       <Route path="/admin" element={<AdminLayout />}>
         <Route index element={<AdminOverview />} />
         <Route path="products" element={<AdminProducts />} />
+        <Route path="categories" element={<AdminCategories />} />
+        <Route path="customers" element={<AdminCustomers />} />
+        <Route path="customers/:id" element={<AdminCustomerDetail />} />
+        <Route path="coupons" element={<AdminCoupons />} />
+        <Route path="customer-analytics" element={<AdminCustomerAnalytics />} />
+        <Route path="settings" element={<AdminSettings />} />
         <Route path="orders" element={<AdminOrders />} />
       </Route>
     </Routes>

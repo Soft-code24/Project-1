@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react'
-import { Eye, ReceiptText } from 'lucide-react'
-import { useOrders } from '../context/OrderContext.jsx'
+import { useMemo, useState, useEffect } from 'react'
+import { Eye, Package, ReceiptText } from 'lucide-react'
+import { api } from '../lib/api.js'
 import { useToast } from '../context/ToastContext.jsx'
 import { formatDate, formatDateTime, formatNaira } from '../lib/currency.js'
 import { ORDER_STATUSES, PAYMENT_METHODS, STATUS_ORDER } from '../data/orders.js'
@@ -12,11 +12,63 @@ import { StatusBadge } from '../components/ui/Badges.jsx'
 const TABS = [{ id: 'all', label: 'All' }, ...STATUS_ORDER.map((id) => ({ id, label: ORDER_STATUSES[id].label }))]
 
 export default function AdminOrders() {
-  const { orders, updateOrderStatus } = useOrders()
+  const [orders, setOrders] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
   const { showToast } = useToast()
   const [tab, setTab] = useState('all')
   const [query, setQuery] = useState('')
   const [viewing, setViewing] = useState(null)
+  const [cancelling, setCancelling] = useState(null)
+
+  useEffect(() => {
+    let mounted = true
+    async function load() {
+      try {
+        const data = await api.getAdminOrders()
+        if (mounted) {
+          setOrders((data.orders || []).map(mapBackendOrder))
+          setLoading(false)
+        }
+      } catch (err) {
+        if (mounted) {
+          setLoading(false)
+          setError(err.message || 'Failed to load orders')
+        }
+      }
+    }
+    load()
+    return () => {
+      mounted = false
+    }
+  }, [])
+
+  function mapBackendOrder(order) {
+    return {
+      id: order.id,
+      orderNumber: order.order_number,
+      customerId: order.user_id,
+      customerName: order.customer?.full_name || '',
+      customerEmail: order.customer?.email || '',
+      createdAt: order.created_at,
+      status: order.status,
+      paymentMethod: order.payment_method,
+      items: (order.order_items || []).map((item) => ({
+        productId: item.product_id,
+        name: item.product_name,
+        price: Number(item.unit_price) || 0,
+        qty: item.quantity,
+        image: item.products?.image_url || '',
+      })),
+      subtotal: Number(order.subtotal) || 0,
+      discount: Number(order.discount) || 0,
+      deliveryFee: Number(order.delivery_fee) || 0,
+      total: Number(order.total) || 0,
+      contact: order.contact || {},
+      delivery: order.delivery || {},
+      notes: order.notes || '',
+    }
+  }
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -24,12 +76,55 @@ export default function AdminOrders() {
       .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
       .filter((order) => {
         if (tab !== 'all' && order.status !== tab) return false
-        if (q && !`${order.id} ${order.customerName} ${order.contact.email}`.toLowerCase().includes(q)) return false
+        if (q && !`${order.orderNumber} ${order.customerName} ${order.customerEmail}`.toLowerCase().includes(q)) return false
         return true
       })
   }, [orders, tab, query])
 
   const paymentLabel = (id) => PAYMENT_METHODS.find((p) => p.id === id)?.label || id
+
+  const handleStatusChange = async (orderId, newStatus) => {
+    if (newStatus === 'cancelled') {
+      const confirmed = window.confirm(
+        'Cancelling this order will restore stock for all items. Are you sure?'
+      )
+      if (!confirmed) return
+      setCancelling(orderId)
+    }
+    try {
+      await api.updateAdminOrderStatus(orderId, newStatus)
+      setOrders((prev) =>
+        prev.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o))
+      )
+      setViewing((v) => (v?.id === orderId ? { ...v, status: newStatus } : v))
+      showToast(`Order ${orderId} marked as ${ORDER_STATUSES[newStatus].label.toLowerCase()}`, 'success')
+    } catch (err) {
+      showToast(err.message || 'Failed to update order status', 'error')
+    } finally {
+      setCancelling(null)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="container-page py-20 flex flex-col items-center justify-center">
+        <p className="text-body-md text-text-secondary">Loading orders…</p>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="container-page py-16">
+        <EmptyState
+          icon={ReceiptText}
+          title="Unable to load orders"
+          description={error}
+          action={<Button to="/admin">Try again</Button>}
+        />
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -40,9 +135,8 @@ export default function AdminOrders() {
         </p>
       </div>
 
-      {/* Filters */}
       <div className="flex flex-col gap-3">
-        <div className="flex flex-1 items-center rounded-lg border border-border-strong bg-white px-3 py-2 shadow-sm sm:max-w-sm">
+        <div className="flex flex-1 items-center rounded-lg border border-border-strong bg-surface px-3 py-2 shadow-sm sm:max-w-sm">
           <ReceiptText size={16} className="shrink-0 text-text-tertiary" aria-hidden="true" />
           <input
             type="text"
@@ -62,7 +156,7 @@ export default function AdminOrders() {
               className={`rounded-full px-3.5 py-1.5 text-label-sm transition-colors ${
                 tab === t.id
                   ? 'bg-primary font-semibold text-white shadow-sm'
-                  : 'bg-white text-text-secondary border border-border-default hover:text-text-primary'
+                  : 'bg-surface text-text-secondary border border-border-default hover:text-text-primary'
               }`}
             >
               {t.label}
@@ -71,7 +165,6 @@ export default function AdminOrders() {
         </div>
       </div>
 
-      {/* Orders table */}
       {filtered.length === 0 ? (
         <EmptyState
           icon={ReceiptText}
@@ -79,7 +172,7 @@ export default function AdminOrders() {
           description="Orders will appear here as customers check out."
         />
       ) : (
-        <div className="overflow-hidden rounded-2xl bg-white shadow-card">
+        <div className="overflow-hidden rounded-2xl bg-surface shadow-card">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[820px] text-left text-body-md">
               <thead>
@@ -96,10 +189,10 @@ export default function AdminOrders() {
               <tbody>
                 {filtered.map((order) => (
                   <tr key={order.id} className="border-b border-border-subtle last:border-0 hover:bg-surface-container-low">
-                    <td className="tnum px-4 py-3 font-medium text-text-primary">{order.id}</td>
+                    <td className="tnum px-4 py-3 font-medium text-text-primary">{order.orderNumber}</td>
                     <td className="px-4 py-3">
                       <p className="text-text-primary">{order.customerName}</p>
-                      <p className="text-body-sm text-text-secondary">{order.contact.email}</p>
+                      <p className="text-body-sm text-text-secondary">{order.customerEmail}</p>
                     </td>
                     <td className="tnum px-4 py-3 text-text-secondary">{formatDate(order.createdAt)}</td>
                     <td className="tnum px-4 py-3 text-text-secondary">
@@ -109,12 +202,10 @@ export default function AdminOrders() {
                     <td className="px-4 py-3">
                       <select
                         value={order.status}
-                        onChange={(e) => {
-                          updateOrderStatus(order.id, e.target.value)
-                          showToast(`${order.id} marked as ${ORDER_STATUSES[e.target.value].label.toLowerCase()}`)
-                        }}
-                        aria-label={`Status for order ${order.id}`}
-                        className="rounded-lg border border-border-strong bg-white px-2 py-1 text-body-sm text-text-primary focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                        onChange={(e) => handleStatusChange(order.id, e.target.value)}
+                        aria-label={`Status for order ${order.orderNumber}`}
+                        className="rounded-lg border border-border-strong bg-surface px-2 py-1 text-body-sm text-text-primary focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                        disabled={cancelling === order.id}
                       >
                         {STATUS_ORDER.map((status) => (
                           <option key={status} value={status}>
@@ -127,7 +218,7 @@ export default function AdminOrders() {
                       <div className="flex justify-end">
                         <button
                           type="button"
-                          aria-label={`View order ${order.id}`}
+                          aria-label={`View order ${order.orderNumber}`}
                           onClick={() => setViewing(order)}
                           className="flex h-8 w-8 items-center justify-center rounded-lg text-text-secondary transition-colors hover:bg-surface-container hover:text-text-primary"
                         >
@@ -139,15 +230,13 @@ export default function AdminOrders() {
                 ))}
               </tbody>
             </table>
-          </div>
         </div>
-      )}
+      </div>)}
 
-      {/* Order detail modal */}
       <Modal
         open={viewing !== null}
         onClose={() => setViewing(null)}
-        title={`Order ${viewing?.id || ''}`}
+        title={`Order ${viewing?.orderNumber || ''}`}
         description={viewing ? formatDateTime(viewing.createdAt) : ''}
         maxWidth="max-w-xl"
         footer={
@@ -165,6 +254,7 @@ export default function AdminOrders() {
               <div className="rounded-xl bg-page-bg p-4">
                 <h3 className="text-label-md font-semibold text-text-primary">Customer</h3>
                 <p className="mt-1.5 text-body-md text-text-secondary">{viewing.customerName}</p>
+                <p className="text-body-md text-text-secondary">{viewing.customerEmail}</p>
                 <p className="text-body-md text-text-secondary">{viewing.contact.phone}</p>
                 <p className="text-body-md text-text-secondary">{viewing.contact.email}</p>
               </div>
@@ -187,9 +277,15 @@ export default function AdminOrders() {
               <ul className="mt-2 flex flex-col gap-2.5">
                 {viewing.items.map((item) => (
                   <li key={item.productId} className="flex items-center gap-3">
-                    <div className="h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-surface-container-low">
-                      <img src={item.image} alt="" className="h-full w-full object-cover" />
-                    </div>
+                    {item.image ? (
+                      <div className="h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-surface-container-low">
+                        <img src={item.image} alt="" className="h-full w-full object-cover" />
+                      </div>
+                    ) : (
+                      <div className="h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-surface-container-low flex items-center justify-center">
+                        <Package size={14} className="text-text-tertiary" aria-hidden="true" />
+                      </div>
+                    )}
                     <span className="min-w-0 flex-1 truncate text-body-md text-text-primary">{item.name}</span>
                     <span className="tnum text-body-sm text-text-secondary">× {item.qty}</span>
                     <span className="tnum text-label-md font-semibold text-text-primary">
@@ -219,9 +315,9 @@ export default function AdminOrders() {
                 <dt className="font-semibold text-text-primary">Total</dt>
                 <dd className="tnum font-display text-price-md font-bold text-text-primary">
                   {formatNaira(viewing.total)}
-                </dd>
-              </div>
-            </dl>
+              </dd>
+            </div>
+          </dl>
 
             <div>
               <h3 className="mb-2 text-label-md font-semibold text-text-primary">Update status</h3>
@@ -230,11 +326,7 @@ export default function AdminOrders() {
                   <button
                     key={status}
                     type="button"
-                    onClick={() => {
-                      updateOrderStatus(viewing.id, status)
-                      setViewing({ ...viewing, status })
-                      showToast(`Order ${viewing.id} updated`, 'success')
-                    }}
+                    onClick={() => handleStatusChange(viewing.id, status)}
                     className={`rounded-full px-3.5 py-1.5 text-label-sm transition-colors ${
                       viewing.status === status
                         ? 'bg-primary text-white'

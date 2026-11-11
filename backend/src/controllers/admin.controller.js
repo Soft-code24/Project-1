@@ -8,7 +8,7 @@ export const listOrders = asyncHandler(async (req, res) => {
 
   let builder = supabaseAdmin
     .from('orders')
-    .select('*, order_items(*)')
+    .select('*, order_items(*, products(image_url))')
     .order('created_at', { ascending: false })
   if (status && status !== 'all') {
     if (!BUSINESS_RULES.orderStatuses.includes(status)) {

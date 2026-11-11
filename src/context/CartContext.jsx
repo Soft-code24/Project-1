@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import { useProducts } from './ProductContext.jsx'
+import { useAuth } from './AuthContext.jsx'
 
 const CartContext = createContext(null)
 const STORAGE_KEY = 'savorbite.cart.v1'
@@ -16,7 +17,17 @@ function loadCart() {
 
 export function CartProvider({ children }) {
   const [items, setItems] = useState(loadCart)
-  const { getProduct } = useProducts()
+  const { getProduct, loading } = useProducts()
+  const { user } = useAuth()
+
+  // Clear cart when the authenticated user changes (e.g. logging into a new
+  // account should not show the previous account's cart items).
+  useEffect(() => {
+    if (!user) {
+      setItems([])
+      localStorage.removeItem(STORAGE_KEY)
+    }
+  }, [user?.id])
 
   useEffect(() => {
     try {
@@ -25,6 +36,16 @@ export function CartProvider({ children }) {
       // storage may be unavailable
     }
   }, [items])
+
+  // Drop legacy cart entries whose product IDs no longer match any product
+  // (e.g. old short-string IDs like 'p01' that predate UUID product IDs).
+  // Only prune after products have finished loading; otherwise getProduct
+  // returns null for every item while the catalogue is still empty and wipes
+  // the localStorage cart on every refresh.
+  useEffect(() => {
+    if (loading) return
+    setItems((prev) => prev.filter((line) => Boolean(getProduct(line.id))))
+  }, [getProduct, loading])
 
   const value = useMemo(() => {
     // detailed items resolved against the live product catalogue
@@ -39,8 +60,9 @@ export function CartProvider({ children }) {
     const subtotal = detailedItems.reduce((sum, l) => sum + l.lineTotal, 0)
 
     const addItem = (id, qty = 1) => {
+      if (user?.accountStatus === 'suspended') return
       const product = getProduct(id)
-      if (!product || product.stock <= 0) return
+      if (!product || !product.isActive || product.stock <= 0) return
       setItems((prev) => {
         const existing = prev.find((l) => l.id === id)
         if (existing) {

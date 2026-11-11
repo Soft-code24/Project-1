@@ -6,7 +6,6 @@ import { useToast } from '../context/ToastContext.jsx'
 import { Button } from '../components/ui/Button.jsx'
 import { Field, controlClass } from '../components/ui/Form.jsx'
 import { SavorBiteLogo } from '../components/Logo.jsx'
-import { ADMIN_CREDENTIALS } from '../data/site.js'
 
 export default function AdminLogin() {
   const { login } = useAuth()
@@ -17,23 +16,31 @@ export default function AdminLogin() {
 
   const [form, setForm] = useState({ email: '', password: '' })
   const [error, setError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
 
   const setField = (key) => (e) => setForm((prev) => ({ ...prev, [key]: e.target.value }))
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
-    const result = login(form.email, form.password)
-    if (!result.ok) {
-      setError(result.error)
-      return
+    setSubmitting(true)
+    try {
+      const result = await login(form.email, form.password)
+      if (!result.ok) {
+        setError(result.error || 'Invalid email or password.')
+        return
+      }
+      if (result.user.role !== 'admin') {
+        setError('This account does not have admin access.')
+        return
+      }
+      showToast('Welcome to the admin dashboard', 'success')
+      navigate(next, { replace: true })
+    } catch (err) {
+      setError(err.message || 'Login failed. Please try again.')
+    } finally {
+      setSubmitting(false)
     }
-    if (result.user.role !== 'admin') {
-      setError('This account does not have admin access.')
-      return
-    }
-    showToast('Welcome to the admin dashboard', 'success')
-    navigate(next, { replace: true })
   }
 
   return (
@@ -47,7 +54,7 @@ export default function AdminLogin() {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4 rounded-2xl border border-border-subtle bg-white p-6 shadow-card" noValidate>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4 rounded-2xl border border-border-subtle bg-surface p-6 shadow-card" noValidate>
           <Field label="Email address" htmlFor="admin-email" required>
             <input
               id="admin-email"
@@ -77,20 +84,19 @@ export default function AdminLogin() {
             </p>
           )}
 
-          <Button type="submit" size="lg" className="w-full">
+          <Button type="submit" size="lg" className="w-full" disabled={submitting}>
             <Lock size={15} aria-hidden="true" />
-            Sign in
+            {submitting ? 'Signing in...' : 'Sign in'}
           </Button>
         </form>
 
-        <div className="mt-4 flex items-start gap-2.5 rounded-xl border border-border-default bg-white p-4 text-body-sm text-text-secondary shadow-card">
-          <ShieldCheck size={16} className="mt-0.5 shrink-0 text-emerald-600" aria-hidden="true" />
-          <p>
-            Prototype credentials — email <span className="font-medium text-text-primary">{ADMIN_CREDENTIALS.email}</span>, password{' '}
-            <span className="font-medium text-text-primary">{ADMIN_CREDENTIALS.password}</span>. In production this
-            is replaced by Supabase Auth with row-level security.
-          </p>
-        </div>
+          <div className="mt-4 flex items-start gap-2.5 rounded-xl border border-border-default bg-surface p-4 text-body-sm text-text-secondary shadow-card">
+            <ShieldCheck size={16} className="mt-0.5 shrink-0 text-emerald-600" aria-hidden="true" />
+            <p>
+              Sign in with an administrator account to manage products and orders. In production this
+              is replaced by Supabase Auth with row-level security.
+            </p>
+          </div>
 
         <p className="mt-4 text-center text-body-sm text-text-secondary">
           <Link to="/" className="font-medium text-primary hover:underline">

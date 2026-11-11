@@ -1,9 +1,10 @@
 import { DELIVERY_FEE, FREE_DELIVERY_THRESHOLD, PROMO } from '../data/site.js'
 
-export function computeTotals(subtotal, promoApplied = false) {
-  const deliveryFee = subtotal === 0 || subtotal >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE
+export function computeTotals(subtotal, promoApplied = false, { deliveryFee = DELIVERY_FEE, freeDeliveryThreshold = FREE_DELIVERY_THRESHOLD } = {}) {
+  const effectiveDeliveryFee =
+    subtotal === 0 || subtotal >= freeDeliveryThreshold ? 0 : deliveryFee
   const discount = promoApplied ? Math.round((subtotal * PROMO.discountPercent) / 100) : 0
-  return { subtotal, deliveryFee, discount, total: subtotal + deliveryFee - discount }
+  return { subtotal, deliveryFee: effectiveDeliveryFee, discount, total: subtotal + effectiveDeliveryFee - discount }
 }
 
 export function isValidPromo(code) {

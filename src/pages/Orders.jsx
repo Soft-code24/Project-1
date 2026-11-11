@@ -19,7 +19,7 @@ const TABS = [
 const ACTIVE_STATUSES = ['pending', 'paid', 'preparing', 'out-for-delivery']
 
 export default function Orders() {
-  const { orders } = useOrders()
+  const { orders, loading, error } = useOrders()
   const { addItem } = useCart()
   const { showToast } = useToast()
   const navigate = useNavigate()
@@ -31,6 +31,27 @@ export default function Orders() {
     if (tab === 'delivered') return list.filter((o) => o.status === 'delivered')
     return list
   }, [orders, tab])
+
+  if (loading) {
+    return (
+      <div className="container-page py-20 flex flex-col items-center justify-center">
+        <p className="text-body-md text-text-secondary">Loading your orders…</p>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="container-page py-16">
+        <EmptyState
+          icon={Package}
+          title="Unable to load orders"
+          description={error}
+          action={<Button to="/shop">Browse the menu</Button>}
+        />
+      </div>
+    )
+  }
 
   const reorder = (order) => {
     let added = 0
@@ -79,7 +100,7 @@ export default function Orders() {
             <li key={order.id} className="rounded-2xl border border-border-subtle bg-surface p-4 shadow-card sm:p-5">
               <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border-subtle pb-3">
                 <div className="flex items-center gap-2.5">
-                  <span className="tnum font-display text-headline-sm text-text-primary">{order.id}</span>
+                  <span className="tnum font-display text-headline-sm text-text-primary">{order.orderNumber}</span>
                   <StatusBadge status={order.status} />
                 </div>
                 <span className="tnum text-body-sm text-text-secondary">{formatDate(order.createdAt)}</span>
@@ -88,9 +109,15 @@ export default function Orders() {
               <ul className="flex flex-col gap-2.5 py-3">
                 {order.items.map((item) => (
                   <li key={`${order.id}-${item.productId}`} className="flex items-center gap-3">
-                    <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-surface-container-low">
-                      <img src={item.image} alt="" className="h-full w-full object-cover" />
-                    </div>
+                    {item.image ? (
+                      <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-surface-container-low">
+                        <img src={item.image} alt="" className="h-full w-full object-cover" />
+                      </div>
+                    ) : (
+                      <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-surface-container-low flex items-center justify-center">
+                        <Package size={16} className="text-text-tertiary" aria-hidden="true" />
+                      </div>
+                    )}
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-body-md text-text-primary">{item.name}</p>
                       <p className="tnum text-body-sm text-text-secondary">

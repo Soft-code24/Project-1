@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react'
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { supabase, isSupabaseConfigured } from '../lib/supabase.js'
 
 const AuthContext = createContext(null)
@@ -11,6 +11,7 @@ function profileToUser(profile) {
     email: profile.email,
     fullName: profile.full_name,
     role: profile.role,
+    accountStatus: profile.account_status,
   }
 }
 
@@ -28,6 +29,7 @@ async function fetchProfile(userId) {
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(emptyUser)
   const [loading, setLoading] = useState(true)
+  const lastUserId = useRef(null)
 
   // Restore session on load and listen for auth changes.
   useEffect(() => {
@@ -42,8 +44,9 @@ export function AuthProvider({ children }) {
           setLoading(false)
           return
         }
+        lastUserId.current = data.user.id
         const profile = await fetchProfile(data.user.id)
-        setUser(profile || { id: data.user.id, email: data.user.email, fullName: '', role: 'customer' })
+        setUser(profile || { id: data.user.id, email: data.user.email, fullName: '', role: 'customer', accountStatus: 'active' })
       } catch (err) {
         console.error('Auth init error:', err)
       } finally {
@@ -51,13 +54,19 @@ export function AuthProvider({ children }) {
       }
 
       const { data: sub } = supabase.auth.onAuthStateChange(async (event, session) => {
+        // Only update user state when the authenticated user actually changes.
+        // Prevents cascading re-renders on TOKEN_REFRESHED events.
         if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
           if (session?.user) {
-            const profile = await fetchProfile(session.user.id)
-            setUser(profile || { id: session.user.id, email: session.user.email, fullName: '', role: 'customer' })
+            const newUserId = session.user.id
+            if (lastUserId.current === newUserId) return
+            lastUserId.current = newUserId
+            const profile = await fetchProfile(newUserId)
+            setUser(profile || { id: newUserId, email: session.user.email, fullName: '', role: 'customer' })
           }
         } else if (event === 'SIGNED_OUT') {
-          setUser(emptyUser)
+          lastUserId.current = null
+          if (user) setUser(emptyUser)
         }
       })
       return () => sub.unsubscribe()
@@ -74,7 +83,7 @@ export function AuthProvider({ children }) {
     if (error || !data.user) return { ok: false, error: error?.message || 'Invalid email or password.' }
     const profile = await fetchProfile(data.user.id)
     setUser(profile || { id: data.user.id, email, fullName: '', role: 'customer' })
-    return { ok: true, user: profile || { id: data.user.id, email, fullName: '', role: 'customer' } }
+    return { ok: true, user: profile || { id: data.user.id, email, fullName: '', role: 'customer', accountStatus: 'active' } }
   }
 
   const register = async (name, email, password) => {
@@ -89,14 +98,14 @@ export function AuthProvider({ children }) {
     if (!data.user) return { ok: false, error: 'Could not create account.' }
     // Profile row is created by the database trigger; fetch it.
     const profile = await fetchProfile(data.user.id)
-    setUser(profile || { id: data.user.id, email, fullName: name.trim(), role: 'customer' })
+    setUser(profile || { id: data.user.id, email, fullName: name.trim(), role: 'customer', accountStatus: 'active' })
     return { ok: true, user: profile || { id: data.user.id, email, fullName: name.trim(), role: 'customer' } }
   }
 
   const loginAsDemoCustomer = async () => {
     if (!supabase) {
       // Fallback when Supabase isn't configured: keep a local demo user.
-      const demoUser = { id: 'demo', email: 'demo@savorbite.ng', fullName: 'Demo Customer', role: 'customer' }
+      const demoUser = { id: 'demo', email: 'demo@savorbite.ng', fullName: 'Demo Customer', role: 'customer', accountStatus: 'active' }
       setUser(demoUser)
       return demoUser
     }
@@ -107,10 +116,10 @@ export function AuthProvider({ children }) {
       })
       if (error || !data.user) throw new Error(error?.message || 'Demo account not available.')
       const profile = await fetchProfile(data.user.id)
-      setUser(profile || { id: data.user.id, email: 'demo@savorbite.ng', fullName: 'Demo Customer', role: 'customer' })
-      return profile || { id: data.user.id, email: 'demo@savorbite.ng', fullName: 'Demo Customer', role: 'customer' }
+      setUser(profile || { id: data.user.id, email: 'demo@savorbite.ng', fullName: 'Demo Customer', role: 'customer', accountStatus: 'active' })
+      return profile || { id: data.user.id, email: 'demo@savorbite.ng', fullName: 'Demo Customer', role: 'customer', accountStatus: 'active' }
     } catch (err) {
-      const demoUser = { id: 'demo', email: 'demo@savorbite.ng', fullName: 'Demo Customer', role: 'customer' }
+      const demoUser = { id: 'demo', email: 'demo@savorbite.ng', fullName: 'Demo Customer', role: 'customer', accountStatus: 'active' }
       setUser(demoUser)
       return demoUser
     }

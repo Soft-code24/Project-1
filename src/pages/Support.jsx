@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { Mail, Phone, MapPin, HelpCircle, Ticket, ChevronDown, Clock } from 'lucide-react'
 import { api } from '../lib/api.js'
 import { useToast } from '../context/ToastContext.jsx'
-import { BUSINESS } from '../data/site.js'
+import { useBusinessSettings } from '../context/BusinessSettingsContext.jsx'
 import { Button } from '../components/ui/Button.jsx'
 import { Field, controlClass, EmptyState } from '../components/ui/Form.jsx'
 import { SEO } from '../components/SEO.jsx'
@@ -35,6 +35,13 @@ const faqs = [
 
 export default function Support() {
   const { showToast } = useToast()
+  const { settings } = useBusinessSettings()
+  const phone = settings?.contact_phone || '+234 801 234 5678'
+  const email = settings?.contact_email || 'hello@savorbite.ng'
+  const phoneHref = settings?.contact_phone ? `tel:${settings.contact_phone}` : 'tel:+2348012345678'
+  const emailHref = settings?.contact_email ? `mailto:${settings.contact_email}` : 'mailto:hello@savorbite.ng'
+  const address = settings?.address || '24 Admiralty Way, Lekki Phase 1, Lagos, Nigeria'
+  const hours = settings?.hours || []
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' })
   const [errors, setErrors] = useState({})
   const [submitting, setSubmitting] = useState(false)
@@ -189,7 +196,7 @@ export default function Support() {
                 </div>
                 <div>
                   <p className="text-label-sm font-semibold text-text-primary">Visit us</p>
-                  <p>{BUSINESS.address}</p>
+                  <p>{address}</p>
                 </div>
               </li>
               <li className="flex items-center gap-3">
@@ -198,7 +205,7 @@ export default function Support() {
                 </div>
                 <div>
                   <p className="text-label-sm font-semibold text-text-primary">Call us</p>
-                  <a href={BUSINESS.phoneHref} className="text-primary hover:underline">{BUSINESS.phone}</a>
+                  <a href={phoneHref} className="text-primary hover:underline">{phone}</a>
                 </div>
               </li>
               <li className="flex items-center gap-3">
@@ -207,7 +214,7 @@ export default function Support() {
                 </div>
                 <div>
                   <p className="text-label-sm font-semibold text-text-primary">Email us</p>
-                  <a href={BUSINESS.emailHref} className="text-primary hover:underline">{BUSINESS.email}</a>
+                  <a href={emailHref} className="text-primary hover:underline">{email}</a>
                 </div>
               </li>
               <li className="flex items-center gap-3">
@@ -216,7 +223,7 @@ export default function Support() {
                 </div>
                 <div>
                   <p className="text-label-sm font-semibold text-text-primary">WhatsApp</p>
-                  <a href={`https://wa.me/${BUSINESS.phone.replace('+', '')}`} className="text-primary hover:underline">
+                  <a href={`https://wa.me/${phone.replace('+', '')}`} className="text-primary hover:underline">
                     Chat on WhatsApp
                   </a>
                 </div>
@@ -227,7 +234,7 @@ export default function Support() {
                 </div>
                 <div>
                   <p className="text-label-sm font-semibold text-text-primary">Opening hours</p>
-                  {BUSINESS.hours.map((h) => (
+                  {hours.map((h) => (
                     <p key={h.day} className="text-text-secondary">
                       {h.day}: {h.time}
                     </p>

@@ -15,6 +15,11 @@ export default function OrderConfirmation() {
   const [error, setError] = useState(null)
 
   useEffect(() => {
+    if (!id || id === 'undefined' || id === 'null') {
+      setLoading(false)
+      setError('No order ID provided')
+      return
+    }
     loadOrder()
   }, [id])
 

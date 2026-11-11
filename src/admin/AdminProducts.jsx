@@ -1,9 +1,10 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { Package, Pencil, Plus, Search, Trash2, Utensils } from 'lucide-react'
-import { CATEGORIES, DIET_TAGS, getCategoryName } from '../data/products.js'
+import { DIET_TAGS, LOW_STOCK_THRESHOLD } from '../data/products.js'
 import { useProducts } from '../context/ProductContext.jsx'
 import { useToast } from '../context/ToastContext.jsx'
 import { formatNaira } from '../lib/currency.js'
+import { api } from '../lib/api.js'
 import { Button } from '../components/ui/Button.jsx'
 import { Modal } from '../components/ui/Modal.jsx'
 import { Field, controlClass, EmptyState } from '../components/ui/Form.jsx'
@@ -11,57 +12,104 @@ import { StockBadge } from '../components/ui/Badges.jsx'
 
 const emptyForm = {
   name: '',
-  category: 'gourmet-bowls',
+  category_id: '',
   price: '',
-  compareAt: '',
+  compare_at_price: '',
   stock: '',
-  short: '',
+  short_description: '',
   description: '',
-  image: '',
+  image_url: '',
   tags: [],
-  featured: false,
+  is_featured: false,
+  is_active: true,
 }
 
 export default function AdminProducts() {
   const { products, saveProduct, deleteProduct } = useProducts()
   const { showToast } = useToast()
 
+  const [categories, setCategories] = useState([])
   const [search, setSearch] = useState('')
-  const [category, setCategory] = useState('all')
+  const [categoryFilter, setCategoryFilter] = useState('all')
+  const [stockFilter, setStockFilter] = useState('all')
   const [editing, setEditing] = useState(null) // product or 'new'
   const [form, setForm] = useState(emptyForm)
   const [errors, setErrors] = useState({})
   const [deleting, setDeleting] = useState(null)
+  const [saving, setSaving] = useState(false)
+  const [stockUpdating, setStockUpdating] = useState(null)
+  const [imageFile, setImageFile] = useState(null)
+  const [imagePreview, setImagePreview] = useState(null)
+  const [uploadingImage, setUploadingImage] = useState(false)
+
+  const [catsLoaded, setCatsLoaded] = useState(false)
+
+  useEffect(() => {
+    let mounted = true
+    async function loadCats() {
+      try {
+        const data = await api.listCategories()
+        if (mounted) {
+          setCategories(data.categories || [])
+          setCatsLoaded(true)
+        }
+      } catch {
+        setCatsLoaded(true)
+      }
+    }
+    loadCats()
+    return () => {
+      mounted = false
+    }
+  }, [])
+
+  const categoryNameById = useMemo(() => {
+    const map = {}
+    categories.forEach((c) => {
+      map[c.id] = c.name
+    })
+    return map
+  }, [categories])
+
+  const categoryOptions = categories.map((c) => ({ value: c.id, label: c.name }))
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
     return products.filter((p) => {
-      if (category !== 'all' && p.category !== category) return false
+      if (categoryFilter !== 'all' && p.category_id !== categoryFilter) return false
       if (q && !p.name.toLowerCase().includes(q)) return false
+      if (stockFilter === 'out-of-stock' && p.stock > 0) return false
+      if (stockFilter === 'low-stock' && (p.stock <= 0 || p.stock > LOW_STOCK_THRESHOLD)) return false
+      if (stockFilter === 'in-stock' && p.stock <= LOW_STOCK_THRESHOLD) return false
       return true
     })
-  }, [products, search, category])
+  }, [products, search, categoryFilter, stockFilter])
 
   const openNew = () => {
     setForm(emptyForm)
     setErrors({})
+    setImageFile(null)
+    setImagePreview(null)
     setEditing('new')
   }
 
   const openEdit = (product) => {
     setForm({
-      name: product.name,
-      category: product.category,
-      price: String(product.price),
-      compareAt: product.compareAt ? String(product.compareAt) : '',
-      stock: String(product.stock),
-      short: product.short || '',
+      name: product.name || '',
+      category_id: product.category_id || '',
+      price: String(product.price || ''),
+      compare_at_price: product.compare_at_price ? String(product.compare_at_price) : '',
+      stock: String(product.stock || ''),
+      short_description: product.short_description || '',
       description: product.description || '',
-      image: product.image || '',
+      image_url: product.image || '',
       tags: product.tags || [],
-      featured: Boolean(product.featured),
+      is_featured: Boolean(product.is_featured),
+      is_active: Boolean(product.is_active),
     })
     setErrors({})
+    setImageFile(null)
+    setImagePreview(product.image || null)
     setEditing(product)
   }
 
@@ -76,47 +124,121 @@ export default function AdminProducts() {
       tags: prev.tags.includes(tagId) ? prev.tags.filter((t) => t !== tagId) : [...prev.tags, tagId],
     }))
 
-  const handleSave = (e) => {
-    e.preventDefault()
+  const validateForm = () => {
     const next = {}
     if (!form.name.trim()) next.name = 'Enter a dish name.'
     if (!form.price || Number(form.price) <= 0) next.price = 'Enter a valid price.'
     if (form.stock === '' || Number(form.stock) < 0) next.stock = 'Enter a stock quantity (0 for sold out).'
     setErrors(next)
-    if (Object.keys(next).length > 0) return
-
-    const payload = {
-      name: form.name.trim(),
-      category: form.category,
-      price: Number(form.price),
-      compareAt: form.compareAt ? Number(form.compareAt) : null,
-      stock: Number(form.stock),
-      short: form.short.trim(),
-      description: form.description.trim() || form.short.trim(),
-      image: form.image.trim() || '/images/hero-jollof-chicken.jpg',
-      tags: form.tags,
-      featured: form.featured,
-    }
-
-    if (editing === 'new') {
-      saveProduct({ ...payload, id: `p${Date.now()}`, rating: 4.5, reviews: 0, alt: payload.name })
-      showToast('Product added', 'success')
-    } else {
-      saveProduct({ ...editing, ...payload })
-      showToast('Product updated', 'success')
-    }
-    setEditing(null)
+    return Object.keys(next).length === 0
   }
 
-  const handleDelete = () => {
-    deleteProduct(deleting.id)
-    showToast(`${deleting.name} deleted`)
+  const buildPayload = () => ({
+    name: form.name.trim(),
+    ...(form.category_id ? { category_id: form.category_id } : {}),
+    price: Number(form.price),
+    ...(form.compare_at_price ? { compare_at_price: Number(form.compare_at_price) } : {}),
+    stock: Number(form.stock),
+    short_description: form.short_description.trim(),
+    description: form.description.trim() || form.short_description.trim(),
+    image_url: form.image_url.trim() || null,
+    tags: form.tags,
+    is_featured: form.featured,
+    is_active: form.is_active,
+  })
+
+  const handleImageChange = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const maxSize = 5 * 1024 * 1024 // 5 MB
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/avif']
+    if (!allowedTypes.includes(file.type)) {
+      showToast('Only JPEG, PNG, WebP, or AVIF images are allowed.', 'error')
+      return
+    }
+    if (file.size > maxSize) {
+      showToast('Image must be 5 MB or smaller.', 'error')
+      return
+    }
+    setImageFile(file)
+    setImagePreview(URL.createObjectURL(file))
+  }
+
+  const handleSave = async (e) => {
+    e.preventDefault()
+    if (!validateForm()) return
+    setSaving(true)
+    try {
+      const payload = buildPayload()
+      let productId
+      if (editing === 'new') {
+        const data = await api.createProduct(payload)
+        productId = data.product.id
+        saveProduct({ ...data.product, rating: 4.5, reviews: 0, alt: payload.name })
+        showToast('Product added', 'success')
+      } else {
+        await api.updateProduct(editing.id, payload)
+        saveProduct({ ...editing, ...payload })
+        showToast('Product updated', 'success')
+        productId = editing.id
+      }
+      setEditing(null)
+
+      // Upload image after product exists
+      if (imageFile && productId) {
+        setUploadingImage(true)
+        try {
+          const data = await api.uploadProductImage(productId, imageFile)
+          saveProduct({ ...data.product, rating: product.rating ?? 4.5, reviews: product.reviews ?? 0 })
+          showToast('Product image uploaded', 'success')
+          setImageFile(null)
+          setImagePreview(null)
+        } catch (err) {
+          showToast(err.message || 'Product saved but image upload failed', 'error')
+        } finally {
+          setUploadingImage(false)
+        }
+      }
+    } catch (err) {
+      showToast(err.message || 'Failed to save product', 'error')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleDelete = async () => {
     setDeleting(null)
+    try {
+      await api.deleteProduct(deleting.id)
+      deleteProduct(deleting.id)
+      showToast(`${deleting.name} deleted`, 'success')
+    } catch (err) {
+      showToast(err.message || 'Failed to delete product', 'error')
+    }
   }
 
-  const quickStock = (product, value) => {
+  const handleStockUpdate = async (productId, value) => {
     const stock = Math.max(0, Number(value) || 0)
-    saveProduct({ ...product, stock })
+    setStockUpdating(productId)
+    try {
+      await api.updateStock(productId, stock)
+      saveProduct({ ...products.find((p) => p.id === productId), stock })
+    } catch (err) {
+      showToast(err.message || 'Failed to update stock', 'error')
+    } finally {
+      setStockUpdating(null)
+    }
+  }
+
+  const handleToggleActive = async (product) => {
+    const next = !product.is_active
+    try {
+      await api.updateProduct(product.id, { is_active: next })
+      saveProduct({ ...product, is_active: next })
+      showToast(`${next ? 'Activated' : 'Deactivated'} ${product.name}`, 'success')
+    } catch (err) {
+      showToast(err.message || 'Failed to update availability', 'error')
+    }
   }
 
   return (
@@ -128,7 +250,7 @@ export default function AdminProducts() {
             {products.length} dishes on the menu · updates apply to the storefront instantly
           </p>
         </div>
-        <Button onClick={openNew}>
+        <Button onClick={openNew} disabled={saving}>
           <Plus size={16} aria-hidden="true" />
           Add product
         </Button>
@@ -136,7 +258,7 @@ export default function AdminProducts() {
 
       {/* Filters */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-        <div className="relative flex flex-1 items-center rounded-lg border border-border-strong bg-white px-3 py-2 shadow-sm">
+        <div className="relative flex flex-1 items-center rounded-lg border border-border-strong bg-surface px-3 py-2 shadow-sm">
           <Search size={16} className="shrink-0 text-text-tertiary" aria-hidden="true" />
           <input
             type="text"
@@ -148,17 +270,28 @@ export default function AdminProducts() {
           />
         </div>
         <select
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
+          value={categoryFilter}
+          onChange={(e) => setCategoryFilter(e.target.value)}
           aria-label="Filter by category"
-          className="rounded-lg border border-border-strong bg-white px-3 py-2 text-body-md text-text-primary shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+          className="rounded-lg border border-border-strong bg-surface px-3 py-2 text-body-md text-text-primary shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
         >
           <option value="all">All categories</option>
-          {CATEGORIES.map((c) => (
+          {categories.map((c) => (
             <option key={c.id} value={c.id}>
               {c.name}
             </option>
           ))}
+        </select>
+        <select
+          value={stockFilter}
+          onChange={(e) => setStockFilter(e.target.value)}
+          aria-label="Filter by stock"
+          className="rounded-lg border border-border-strong bg-surface px-3 py-2 text-body-md text-text-primary shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+        >
+          <option value="all">All stock</option>
+          <option value="in-stock">In stock</option>
+          <option value="low-stock">Low stock</option>
+          <option value="out-of-stock">Out of stock</option>
         </select>
       </div>
 
@@ -171,7 +304,7 @@ export default function AdminProducts() {
           action={<Button onClick={openNew}>Add product</Button>}
         />
       ) : (
-        <div className="overflow-hidden rounded-2xl bg-white shadow-card">
+        <div className="overflow-hidden rounded-2xl bg-surface shadow-card">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[720px] text-left text-body-md">
               <thead>
@@ -189,29 +322,48 @@ export default function AdminProducts() {
                   <tr key={product.id} className="border-b border-border-subtle last:border-0 hover:bg-surface-container-low">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
-                        <div className="h-11 w-11 shrink-0 overflow-hidden rounded-lg bg-surface-container">
-                          <img src={product.image} alt="" className="h-full w-full object-cover" />
+                        <div className="h-11 w-11 shrink-0 overflow-hidden rounded-lg bg-surface-container-low">
+                          <img src={product.image_url || product.image || `/images/${product.slug}.jpg`} alt="" className="h-full w-full object-cover" />
                         </div>
                         <div className="min-w-0">
                           <p className="truncate font-medium text-text-primary">{product.name}</p>
-                          <p className="truncate text-body-sm text-text-secondary">{product.short}</p>
+                          <p className="truncate text-body-sm text-text-secondary">{product.short_description || ''}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-text-secondary">{getCategoryName(product.category)}</td>
+                    <td className="px-4 py-3 text-text-secondary">{categoryNameById[product.category_id] || product.category_id}</td>
                     <td className="tnum px-4 py-3 font-semibold text-text-primary">{formatNaira(product.price)}</td>
                     <td className="px-4 py-3">
                       <input
                         type="number"
                         min={0}
                         value={product.stock}
-                        onChange={(e) => quickStock(product, e.target.value)}
+                        onChange={(e) => handleStockUpdate(product.id, e.target.value)}
                         aria-label={`Stock for ${product.name}`}
-                        className="tnum w-16 rounded-lg border border-border-strong bg-white px-2 py-1 text-body-md text-text-primary focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                        className="tnum w-16 rounded-lg border border-border-strong bg-surface px-2 py-1 text-body-md text-text-primary focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                        disabled={stockUpdating === product.id}
                       />
                     </td>
                     <td className="px-4 py-3">
                       <StockBadge stock={product.stock} />
+                      {product.is_active === false && (
+                        <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-600">
+                          Inactive
+                        </span>
+                      )}
+                      <button
+                        type="button"
+                        aria-label={product.is_active ? `Deactivate ${product.name}` : `Activate ${product.name}`}
+                        onClick={() => handleToggleActive(product)}
+                        disabled={stockUpdating === product.id}
+                        className="flex h-6 w-6 items-center justify-center rounded text-text-secondary transition-colors hover:bg-surface-container hover:text-text-primary disabled:opacity-50"
+                      >
+                        {product.is_active ? (
+                          <Trash2 size={12} className="text-red-500" aria-hidden="true" />
+                        ) : (
+                          <Pencil size={12} className="text-emerald-500" aria-hidden="true" />
+                        )}
+                      </button>
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-end gap-1.5">
@@ -250,10 +402,10 @@ export default function AdminProducts() {
         maxWidth="max-w-2xl"
         footer={
           <div className="flex justify-end gap-3">
-            <Button variant="secondary" onClick={() => setEditing(null)}>
+            <Button variant="secondary" onClick={() => setEditing(null)} disabled={saving}>
               Cancel
             </Button>
-            <Button onClick={handleSave}>{editing === 'new' ? 'Add product' : 'Save changes'}</Button>
+            <Button onClick={handleSave} disabled={saving}>{editing === 'new' ? 'Add product' : 'Save changes'}</Button>
           </div>
         }
       >
@@ -268,16 +420,17 @@ export default function AdminProducts() {
               onChange={setField('name')}
             />
           </Field>
-          <Field label="Category" htmlFor="p-category" required>
+          <Field label="Category" htmlFor="p-category" error={errors.category} required className="sm:col-span-2">
             <select
               id="p-category"
-              className={controlClass(false)}
-              value={form.category}
-              onChange={setField('category')}
+              className={controlClass(errors.category)}
+              value={form.category_id}
+              onChange={setField('category_id')}
             >
-              {CATEGORIES.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
+              <option value="">Select a category</option>
+              {categoryOptions.map((c) => (
+                <option key={c.value} value={c.value}>
+                  {c.label}
                 </option>
               ))}
             </select>
@@ -288,8 +441,8 @@ export default function AdminProducts() {
               type="text"
               placeholder="Wood-fired rice & dodo"
               className={controlClass(false)}
-              value={form.short}
-              onChange={setField('short')}
+              value={form.short_description}
+              onChange={setField('short_description')}
             />
           </Field>
           <Field label="Price (₦)" htmlFor="p-price" error={errors.price} required>
@@ -312,8 +465,8 @@ export default function AdminProducts() {
               step={50}
               placeholder="7200"
               className={controlClass(false)}
-              value={form.compareAt}
-              onChange={setField('compareAt')}
+              value={form.compare_at_price}
+              onChange={setField('compare_at_price')}
             />
           </Field>
           <Field label="Stock quantity" htmlFor="p-stock" error={errors.stock} required>
@@ -327,15 +480,37 @@ export default function AdminProducts() {
               onChange={setField('stock')}
             />
           </Field>
-          <Field label="Image URL" htmlFor="p-image" hint="Paste an image link or keep the default" className="sm:col-span-2">
-            <input
-              id="p-image"
-              type="text"
-              placeholder="/images/hero-jollof-chicken.jpg"
-              className={controlClass(false)}
-              value={form.image}
-              onChange={setField('image')}
-            />
+          <Field label="Product image" htmlFor="p-image" hint="JPEG, PNG, WebP or AVIF, max 5 MB" className="sm:col-span-2">
+            <div className="flex flex-col gap-2">
+              <input
+                id="p-image"
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/avif"
+                onChange={handleImageChange}
+                className="block w-full text-body-sm text-text-primary file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-primary-hover"
+              />
+              {form.image_url && (
+                <div className="mt-3 flex items-center gap-2">
+                  <img src={form.image_url} alt="Current product image" className="h-20 w-20 object-cover rounded-lg" />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setForm((prev) => ({ ...prev, image_url: '' }))
+                      setImageFile(null)
+                      setImagePreview(null)
+                    }}
+                    className="text-xs text-red-600 hover:text-red-800"
+                  >
+                    Remove
+                  </button>
+                </div>
+              )}
+              {imagePreview && !form.image_url && (
+                <div className="mt-3 flex items-center gap-2">
+                  <img src={imagePreview} alt="Image preview" className="h-20 w-20 object-cover rounded-lg" />
+                </div>
+              )}
+            </div>
           </Field>
           <Field label="Full description" htmlFor="p-description" className="sm:col-span-2">
             <textarea
@@ -374,13 +549,20 @@ export default function AdminProducts() {
           <label className="flex cursor-pointer items-center gap-2 sm:col-span-2">
             <input
               type="checkbox"
-              className="h-4 w-4 rounded border-border-strong accent-primary"
-              checked={form.featured}
-              onChange={setField('featured')}
+              className="h-4 w-4 rounded border border-border-strong accent-primary"
+              checked={form.is_featured}
+              onChange={setField('is_featured')}
             />
-            <span className="text-label-md text-text-primary">
-              Feature on homepage
-            </span>
+            <span className="text-label-md text-text-primary">Feature on homepage</span>
+          </label>
+          <label className="flex cursor-pointer items-center gap-2 sm:col-span-2">
+            <input
+              type="checkbox"
+              className="h-4 w-4 rounded border border-border-strong accent-primary"
+              checked={form.is_active}
+              onChange={setField('is_active')}
+            />
+            <span className="text-label-md text-text-primary">Active on menu</span>
           </label>
           <button type="submit" className="hidden" aria-hidden="true" />
         </form>
@@ -398,7 +580,7 @@ export default function AdminProducts() {
             <Button variant="secondary" onClick={() => setDeleting(null)}>
               Keep product
             </Button>
-            <Button variant="destructive" onClick={handleDelete}>
+            <Button variant="destructive" onClick={handleDelete} disabled={stockUpdating !== null}>
               <Trash2 size={15} aria-hidden="true" />
               Delete
             </Button>
@@ -406,8 +588,8 @@ export default function AdminProducts() {
         }
       >
         <div className="flex items-center gap-3.5">
-          <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-surface-container">
-            {deleting && <img src={deleting.image} alt="" className="h-full w-full object-cover" />}
+          <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-surface-container-low">
+            {deleting && <img src={deleting.image_url || `/images/${deleting.slug}.jpg`} alt="" className="h-full w-full object-cover" />}
           </div>
           <div>
             <p className="font-medium text-text-primary">{deleting?.name}</p>

@@ -135,7 +135,7 @@ export default function Cart() {
                 onChange={(e) => setPromoInput(e.target.value)}
                 placeholder="Promo code"
                 aria-label="Promo code"
-                className="w-full rounded-lg border border-border-strong bg-surface px-3.5 py-2 text-body-md text-text-primary placeholder:text-text-tertiary focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                className="w-full rounded-lg border border-border-strong bg-surface px-3.5 py-2 text-body-md text-text-primary placeholder:text-text-secondary focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
               />
               <Button type="submit" variant="secondary" className="shrink-0">
                 <BadgePercent size={15} aria-hidden="true" />

@@ -11,6 +11,7 @@ export function ProductCard({ product, layout = 'shop' }) {
   const { addItem } = useCart()
   const { showToast } = useToast()
   const [favorite, setFavorite] = useState(false)
+  const unavailable = !product.isActive || product.stock <= 0
   const soldOut = product.stock <= 0
   const href = `/product/${product.id}`
 
@@ -28,7 +29,7 @@ export function ProductCard({ product, layout = 'shop' }) {
           src={product.image}
           alt={product.alt}
           loading="lazy"
-          className={`h-full w-full object-cover transition-transform duration-300 group-hover:scale-105 ${soldOut ? 'grayscale-[35%]' : ''}`}
+          className={`h-full w-full object-cover transition-transform duration-300 group-hover:scale-105 ${unavailable ? 'grayscale-[35%]' : ''}`}
         />
         <span className="absolute left-2 top-2">
           <StockBadge stock={product.stock} />
@@ -52,7 +53,7 @@ export function ProductCard({ product, layout = 'shop' }) {
         >
           {product.name}
         </Link>
-        <p className={`line-clamp-1 text-body-sm ${soldOut ? 'text-text-tertiary' : 'text-text-secondary'}`}>
+        <p className={`line-clamp-1 text-body-sm ${unavailable ? 'text-text-tertiary' : 'text-text-secondary'}`}>
           {product.short}
         </p>
         <div className="mt-auto flex items-end justify-between gap-2 pt-1">
@@ -62,13 +63,13 @@ export function ProductCard({ product, layout = 'shop' }) {
                 {formatNaira(product.compareAt)}
               </span>
             )}
-            <span className={`font-display text-price-md tnum ${soldOut ? 'text-text-tertiary line-through' : 'text-text-primary'}`}>
+            <span className={`font-display text-price-md tnum ${unavailable ? 'text-text-tertiary line-through' : 'text-text-primary'}`}>
               {formatNaira(product.price)}
             </span>
           </div>
-          {soldOut ? (
+          {unavailable ? (
             <span className="inline-flex cursor-not-allowed items-center gap-1 rounded-lg bg-surface-container px-2.5 py-1.5 text-label-sm text-text-tertiary">
-              Sold out
+              Unavailable
             </span>
           ) : layout === 'shop' ? (
             <button

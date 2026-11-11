@@ -1,4 +1,4 @@
-import { asyncHandler } from '../utils/ApiError.js'
+import { asyncHandler, ApiError } from '../utils/ApiError.js'
 import { supabaseAdmin } from '../config/supabase.js'
 import { query, querySingle } from '../services/supabase.service.js'
 
@@ -21,16 +21,57 @@ export const createCategory = asyncHandler(async (req, res) => {
 export const updateCategory = asyncHandler(async (req, res) => {
   const { id } = req.params
   const patch = {}
-  for (const key of ['name', 'slug', 'sort_order']) {
+  for (const key of ['name', 'slug', 'description', 'image_url', 'sort_order', 'is_active']) {
     if (req.body[key] !== undefined) patch[key] = req.body[key]
   }
   const category = await querySingle(
     supabaseAdmin.from('categories').update(patch).eq('id', id).select().single(),
+    'Category not found',
   )
   res.json({ category })
 })
 
 export const deleteCategory = asyncHandler(async (req, res) => {
-  await query(supabaseAdmin.from('categories').delete().eq('id', req.params.id))
-  res.json({ message: 'Category deleted' })
+  const { id } = req.params
+  const { reassign_to } = req.body
+
+  const { data: products } = await supabaseAdmin.from('products').select('id').eq('category_id', id)
+
+  const productCount = (products || []).length
+
+  if (productCount > 0) {
+    if (!reassign_to || typeof reassign_to !== 'string') {
+      throw ApiError.conflict(
+        `Category contains ${productCount} product(s). Reassign them to another category before deleting.`,
+      )
+    }
+
+    const { data: target } = await supabaseAdmin
+      .from('categories')
+      .select('id, is_active')
+      .eq('id', reassign_to)
+      .single()
+
+    if (!target) {
+      throw ApiError.badRequest('Reassignment target category does not exist')
+    }
+    if (reassign_to === id) {
+      throw ApiError.badRequest('Cannot reassign products to the category being deleted')
+    }
+    if (!target.is_active) {
+      throw ApiError.badRequest('Reassignment target category must be active')
+    }
+
+    const { error: reassignError } = await supabaseAdmin
+      .from('products')
+      .update({ category_id: reassign_to })
+      .eq('category_id', id)
+
+    if (reassignError) {
+      throw ApiError.badRequest('Could not reassign products: ' + reassignError.message)
+    }
+  }
+
+  await query(supabaseAdmin.from('categories').delete().eq('id', id))
+  res.json({ message: 'Category deleted', productsReassigned: productCount > 0 ? productCount : 0 })
 })

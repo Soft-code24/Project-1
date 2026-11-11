@@ -1,5 +1,5 @@
 const controlBase =
-  'w-full rounded-lg border bg-surface px-3.5 py-2 text-body-md text-text-primary placeholder:text-text-tertiary transition-colors focus:outline-none focus:ring-1'
+  'w-full rounded-lg border bg-surface px-3.5 py-2 text-body-md text-text-primary dark:bg-surface dark:text-text-primary placeholder:text-text-secondary dark:placeholder:text-text-secondary transition-colors focus:outline-none focus:ring-1'
 
 export const controlClass = (invalid) =>
   `${controlBase} ${invalid ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-border-strong focus:border-primary focus:ring-primary'}`

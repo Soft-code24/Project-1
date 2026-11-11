@@ -43,6 +43,6 @@ export function mapSupabaseError(error, fallbackMessage = 'Database error') {
   }
   const status = statusMap[postgrestCode] || 500
   const message =
-    status === 500 && !process.env.SUPABASE_JWT_SECRET ? fallbackMessage : error.message || fallbackMessage
+    status === 500 ? fallbackMessage : error.message || fallbackMessage
   return new ApiError(status, message)
 }

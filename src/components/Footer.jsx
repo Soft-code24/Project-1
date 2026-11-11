@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Clock, Mail, MapPin, Phone } from 'lucide-react'
 import { SavorBiteLogo } from './Logo.jsx'
-import { BUSINESS } from '../data/site.js'
+import { useBusinessSettings } from '../context/BusinessSettingsContext.jsx'
 
 const exploreLinks = [
   { label: 'Home', to: '/' },
@@ -20,17 +20,33 @@ const legalLinks = [
 ]
 
 export function Footer() {
+  const { settings } = useBusinessSettings()
+  const name = settings?.restaurant_name || 'SavorBite'
+  const tagline = settings?.tagline || 'Freshly crafted meals, delivered fast'
+  const city = settings?.city || 'Lagos, NG'
+  const address = settings?.address || '24 Admiralty Way, Lekki Phase 1, Lagos, Nigeria'
+  const phone = settings?.contact_phone || '+234 801 234 5678'
+  const phoneHref = settings?.contact_phone ? `tel:${settings.contact_phone}` : 'tel:+2348012345678'
+  const email = settings?.contact_email || 'hello@savorbite.ng'
+  const emailHref = settings?.contact_email ? `mailto:${settings.contact_email}` : 'mailto:hello@savorbite.ng'
+  const hours = settings?.hours || []
+  const socials = settings?.socials || []
+  const logoUrl = settings?.logo_url
+
   return (
     <footer className="mt-8 bg-charcoal dark:bg-surface-container-low border-t border-border-subtle md:block">
       <div className="container-page grid grid-cols-2 gap-10 py-14 lg:grid-cols-4">
         <div>
           <SavorBiteLogo className="h-10 w-10 showWordmark" wordmarkClassName="!text-white" />
+          {logoUrl && (
+            <img src={logoUrl} alt={`${name} logo`} className="mt-3 h-10 w-auto object-contain" />
+          )}
           <p className="mt-4 max-w-xs text-body-md leading-relaxed text-white dark:text-text-secondary">
-            {BUSINESS.tagline}. Chef-crafted meals made to order and delivered across{' '}
-            {BUSINESS.city} in under 30 minutes.
+            {tagline}. Chef-crafted meals made to order and delivered across{' '}
+            {city} in under 30 minutes.
           </p>
           <div className="mt-5 flex gap-2">
-            {BUSINESS.socials.map((s) => (
+            {socials.map((s) => (
               <a
                 key={s.label}
                 href={s.href}
@@ -63,24 +79,24 @@ export function Footer() {
           <ul className="mt-4 flex flex-col gap-3 text-body-md text-white dark:text-text-secondary">
             <li className="flex items-start gap-2.5">
               <MapPin size={16} className="mt-0.5 shrink-0 text-primary dark:text-primary" aria-hidden="true" />
-              {BUSINESS.address}
+              {address}
             </li>
             <li className="flex items-center gap-2.5">
               <Phone size={16} className="shrink-0 text-primary dark:text-primary" aria-hidden="true" />
-              <a href={BUSINESS.phoneHref} className="transition-colors hover:text-white dark:hover:text-text-primary">
-                {BUSINESS.phone}
+              <a href={phoneHref} className="transition-colors hover:text-white dark:hover:text-text-primary">
+                {phone}
               </a>
             </li>
             <li className="flex items-center gap-2.5">
               <Mail size={16} className="shrink-0 text-primary dark:text-primary" aria-hidden="true" />
-              <a href={BUSINESS.emailHref} className="transition-colors hover:text-white dark:hover:text-text-primary">
-                {BUSINESS.email}
+              <a href={emailHref} className="transition-colors hover:text-white dark:hover:text-text-primary">
+                {email}
               </a>
             </li>
             <li className="flex items-start gap-2.5">
               <Clock size={16} className="mt-0.5 shrink-0 text-primary dark:text-primary" aria-hidden="true" />
               <span>
-                {BUSINESS.hours.map((h) => (
+                {hours.map((h) => (
                   <span key={h.day} className="block">
                     {h.day}: {h.time}
                   </span>
@@ -118,7 +134,7 @@ export function Footer() {
       </div>
       <div className="border-t border-white/10 dark:border-text-tertiary/20">
         <div className="container-page flex flex-col items-center justify-between gap-2 py-5 text-body-sm text-white/70 dark:text-text-tertiary sm:flex-row">
-          <p>© 2026 SavorBite Foods Ltd. All rights reserved.</p>
+          <p>© 2026 {name} Foods Ltd. All rights reserved.</p>
           <p>Fast, fresh and securely paid — built with React &amp; Tailwind CSS.</p>
         </div>
       </div>

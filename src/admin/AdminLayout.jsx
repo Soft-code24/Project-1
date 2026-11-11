@@ -1,5 +1,5 @@
 import { Link, NavLink, Navigate, Outlet, useLocation } from 'react-router-dom'
-import { ExternalLink, LayoutDashboard, LogOut, Package, ReceiptText } from 'lucide-react'
+import { ExternalLink, LayoutDashboard, LayoutList, LogOut, Package, PieChart, ReceiptText, Settings, Tag, Users } from 'lucide-react'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useToast } from '../context/ToastContext.jsx'
 import { SavorBiteLogo } from '../components/Logo.jsx'
@@ -7,6 +7,11 @@ import { SavorBiteLogo } from '../components/Logo.jsx'
 const navItems = [
   { to: '/admin', label: 'Overview', icon: LayoutDashboard, end: true },
   { to: '/admin/products', label: 'Products', icon: Package, end: false },
+  { to: '/admin/categories', label: 'Categories', icon: LayoutList, end: false },
+  { to: '/admin/customers', label: 'Customers', icon: Users, end: false },
+  { to: '/admin/coupons', label: 'Coupons', icon: Tag, end: false },
+  { to: '/admin/customer-analytics', label: 'Customer Analytics', icon: PieChart, end: false },
+  { to: '/admin/settings', label: 'Settings', icon: Settings, end: false },
   { to: '/admin/orders', label: 'Orders', icon: ReceiptText, end: false },
 ]
 
@@ -29,7 +34,7 @@ export function AdminLayout() {
   return (
     <div className="flex min-h-dvh bg-page-bg">
       {/* Desktop sidebar */}
-      <aside className="hidden w-60 shrink-0 flex-col border-r border-border-subtle bg-white lg:flex">
+      <aside className="hidden w-60 shrink-0 flex-col border-r border-border-subtle bg-surface lg:flex">
         <div className="flex h-16 items-center gap-2 border-b border-border-subtle px-4">
           <SavorBiteLogo className="h-8 w-8" />
           <div className="flex flex-col leading-none">
@@ -68,7 +73,7 @@ export function AdminLayout() {
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 border-b border-border-subtle bg-white/90 backdrop-blur">
+        <header className="sticky top-0 z-30 border-b border-border-subtle bg-surface/90 backdrop-blur">
           <div className="flex h-16 items-center justify-between gap-3 px-4 md:px-6">
             <div className="flex items-center gap-2 lg:hidden">
               <SavorBiteLogo className="h-7 w-7" />

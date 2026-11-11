@@ -37,3 +37,12 @@ export const paymentLimiter = rateLimit({
   legacyHeaders: false,
   message: { error: 'Too many payment requests — please try again later.' },
 })
+
+// Coupon validation protection (customer-facing)
+export const couponLimiter = rateLimit({
+  windowMs,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many coupon validation requests — please try again later.' },
+})

@@ -50,7 +50,7 @@ export const listProducts = asyncHandler(async (req, res) => {
 
   let builder = supabaseAdmin
     .from('products')
-    .select('*, categories(id, name, slug), product_images(*, id desc)', { count: 'exact' })
+    .select('*, categories(id, name, slug)', { count: 'exact' })
     .order(sortOption.column, { ascending: sortOption.ascending })
 
   if (!isAdminView) builder = builder.eq('is_active', true)

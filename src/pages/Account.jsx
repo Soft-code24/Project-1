@@ -51,11 +51,11 @@ export default function Account() {
         <div className="flex flex-col gap-5">
           <div className="flex items-center gap-4 rounded-2xl border border-border-subtle bg-surface p-5 shadow-card">
             <span className="flex h-14 w-14 items-center justify-center rounded-full bg-primary text-headline-md font-semibold text-white">
-              {user.name.charAt(0).toUpperCase()}
+              {(user.name?.charAt(0) || '?').toUpperCase()}
             </span>
             <div className="min-w-0">
-              <p className="truncate font-display text-headline-md text-text-primary">{user.name}</p>
-              <p className="truncate text-body-md text-text-secondary">{user.email}</p>
+              <p className="truncate font-display text-headline-md text-text-primary">{user.name || 'Unknown'}</p>
+              <p className="truncate text-body-md text-text-secondary">{user.email || 'No email'}</p>
               <span className="mt-1 inline-block rounded-full bg-emerald-50 dark:bg-emerald-900/20 px-2.5 py-0.5 text-badge-xs font-medium text-emerald-700 dark:text-emerald-400">
                 {user.role === 'admin' ? 'Administrator' : 'Customer'}
               </span>
@@ -110,19 +110,21 @@ export default function Account() {
             </Button>
           </div>
 
-          <Link
-            to="/admin/login"
-            className="flex items-center gap-3 rounded-2xl border border-border-subtle bg-surface p-5 shadow-card transition-colors hover:border-border-strong"
-          >
-            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-charcoal text-white">
-              <LayoutDashboard size={17} aria-hidden="true" />
-            </span>
-            <span className="flex-1">
-              <span className="block text-label-md font-semibold text-text-primary">Admin dashboard</span>
-              <span className="block text-body-sm text-text-secondary">Manage products &amp; orders</span>
-            </span>
-            <ChevronRight size={16} className="text-text-tertiary" aria-hidden="true" />
-          </Link>
+          {user.role === 'admin' && (
+            <Link
+              to="/admin/login"
+              className="flex items-center gap-3 rounded-2xl border border-border-subtle bg-surface p-5 shadow-card transition-colors hover:border-border-strong"
+            >
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-charcoal text-white">
+                <LayoutDashboard size={17} aria-hidden="true" />
+              </span>
+              <span className="flex-1">
+                <span className="block text-label-md font-semibold text-text-primary">Admin dashboard</span>
+                <span className="block text-body-sm text-text-secondary">Manage products &amp; orders</span>
+              </span>
+              <ChevronRight size={16} className="text-text-tertiary" aria-hidden="true" />
+            </Link>
+          )}
         </div>
       </div>
     </div>

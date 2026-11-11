@@ -27,11 +27,6 @@ export const PROMO = {
 export const DELIVERY_FEE = 1500
 export const FREE_DELIVERY_THRESHOLD = 20000
 
-export const ADMIN_CREDENTIALS = {
-  email: 'admin@savorbite.ng',
-  password: 'admin123',
-}
-
 export const HERO_IMAGE = '/images/hero-jollof-chicken.jpg'
 
 export const FEATURED_LINKS = [

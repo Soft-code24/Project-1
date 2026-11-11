@@ -52,10 +52,11 @@ export default function ProductDetail() {
   }
 
   const soldOut = product.stock <= 0
+  const unavailable = !product.isActive || product.stock <= 0
   const relatedItems = related(product, 4)
 
   const handleAdd = () => {
-    if (soldOut) return
+    if (unavailable) return
     addItem(product.id, qty)
     showToast(`${qty} × ${product.name} added to cart`, 'success')
   }
@@ -90,7 +91,7 @@ export default function ProductDetail() {
         {/* Media */}
         <div className="flex flex-col gap-3">
           <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-surface-container-low shadow-card">
-            <img src={product.image} alt={product.alt} className={`h-full w-full object-cover ${soldOut ? 'grayscale' : ''}`} />
+            <img src={product.image} alt={product.alt} className={`h-full w-full object-cover ${unavailable ? 'grayscale' : ''}`} />
             <span className="absolute left-3 top-3">
               <StockBadge stock={product.stock} />
             </span>
@@ -190,7 +191,7 @@ export default function ProductDetail() {
               />
             </div>
             <div className="flex flex-col gap-2 sm:flex-row">
-              <Button size="lg" className="flex-1" onClick={handleAdd} disabled={soldOut}>
+              <Button size="lg" className="flex-1" onClick={handleAdd} disabled={unavailable}>
                 <ShoppingCart size={17} aria-hidden="true" />
                 {soldOut ? 'Sold out' : `Add to cart · ${formatNaira(product.price * qty)}`}
               </Button>
@@ -198,7 +199,7 @@ export default function ProductDetail() {
                 View cart
               </Button>
             </div>
-            {!soldOut && product.stock <= 5 && (
+            {!unavailable && product.stock <= 5 && (
               <p className="flex items-center gap-1.5 text-body-sm text-amber-700 dark:text-amber-400">
                 <Timer size={14} aria-hidden="true" />
                 Only {product.stock} left — order soon.
@@ -230,7 +231,7 @@ export default function ProductDetail() {
       )}
 
       {/* Mobile sticky order bar */}
-      {!soldOut && (
+      {!unavailable && (
         <div className="fixed inset-x-0 bottom-16 z-40 flex items-center justify-between gap-3 border-t border-border-default bg-surface/95 dark:bg-surface/95 px-4 py-3 shadow-overlay backdrop-blur md:hidden">
           <div className="flex flex-col">
             <span className="tnum font-display text-price-md font-bold text-text-primary">

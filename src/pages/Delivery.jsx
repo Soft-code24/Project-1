@@ -2,7 +2,6 @@ import { Link } from 'react-router-dom'
 import { Truck, MapPin } from 'lucide-react'
 import { Button } from '../components/ui/Button.jsx'
 import { SEO } from '../components/SEO.jsx'
-import { BUSINESS } from '../data/site.js'
 
 export default function Delivery() {
   return (

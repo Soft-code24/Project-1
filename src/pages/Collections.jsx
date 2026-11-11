@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Search, SlidersHorizontal, Utensils, X } from 'lucide-react'
-import { PRODUCTS } from '../data/products.js'
 import { COLLECTIONS, getCollectionBySlug } from '../data/collections.js'
 import { DIET_TAGS } from '../data/products.js'
 import { useProducts } from '../context/ProductContext.jsx'
@@ -118,14 +117,14 @@ export default function Collections() {
               onChange={(e) => setQuery(e.target.value)}
               placeholder={`Search ${collection.name}…`}
               aria-label="Search collection"
-              className="ml-2 w-full bg-transparent text-body-md text-text-primary placeholder:text-text-tertiary focus:outline-none"
+              className="ml-2 w-full bg-transparent text-body-md text-text-primary placeholder:text-text-secondary focus:outline-none"
             />
             {query && (
               <button
                 type="button"
                 aria-label="Clear search"
                 onClick={() => setQuery('')}
-                className="p-0.5 text-text-tertiary transition-colors hover:text-text-primary"
+                className="p-0.5 text-text-secondary transition-colors hover:text-text-primary"
               >
                 <X size={16} aria-hidden="true" />
               </button>
@@ -183,7 +182,7 @@ export default function Collections() {
       <div className="mb-3 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <h1 className="font-display text-headline-sm text-text-primary md:text-headline-md">{collection.name}</h1>
-          <span className="tnum text-body-sm text-text-tertiary">({filtered.length} items)</span>
+          <span className="tnum text-body-sm text-text-secondary">({filtered.length} items)</span>
         </div>
         <div className="relative">
           <button

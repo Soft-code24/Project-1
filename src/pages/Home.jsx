@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { ArrowRight, Bike, Flame, Leaf, Lock, Quote, Timer, Zap } from 'lucide-react'
-import { CATEGORIES, CHEF_SPECIAL_ID } from '../data/products.js'
+import { CATEGORIES } from '../data/products.js'
 import { HERO_IMAGE, PROMO } from '../data/site.js'
 import { useProducts } from '../context/ProductContext.jsx'
 import { useCart } from '../context/CartContext.jsx'
@@ -46,11 +46,11 @@ const testimonials = [
 ]
 
 export default function Home() {
-  const { products, getProduct } = useProducts()
+  const { products } = useProducts()
   const { addItem } = useCart()
   const { showToast } = useToast()
   const featured = products.filter((p) => p.featured && p.stock > 0).slice(0, 4)
-  const special = getProduct(CHEF_SPECIAL_ID)
+  const special = featured[0]
 
   const handleAddSpecial = () => {
     if (!special || special.stock <= 0) return

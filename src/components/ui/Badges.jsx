@@ -10,6 +10,7 @@ import {
   UtensilsCrossed,
 } from 'lucide-react'
 import { ORDER_STATUSES } from '../../data/orders.js'
+import { LOW_STOCK_THRESHOLD } from '../../data/products.js'
 
 const CATEGORY_ICONS = {
   'gourmet-bowls': Soup,
@@ -58,7 +59,7 @@ export function StockBadge({ stock }) {
       </Badge>
     )
   }
-  if (stock <= 5) {
+  if (stock <= LOW_STOCK_THRESHOLD) {
     return (
       <Badge className="bg-amber-100 dark:bg-amber-900/20 text-amber-800 dark:text-amber-400 font-semibold shadow-sm">
         <span className="h-1.5 w-1.5 rounded-full bg-amber-500 dark:bg-amber-400" />
