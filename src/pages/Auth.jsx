@@ -11,7 +11,7 @@ import { HERO_IMAGE } from '../data/site.js'
 const perks = [
   { icon: Bike, title: '30-minute delivery', text: 'Across Lekki, VI & Ikoyi' },
   { icon: Leaf, title: 'Fresh every day', text: 'Farm-sourced ingredients' },
-  { icon: Lock, title: 'Secure payments', text: 'Paystack & Flutterwave' },
+  { icon: Lock, title: 'Secure payments', text: 'Cash on delivery' },
   { icon: Utensils, title: 'Chef-crafted menu', text: 'Prepared to order' },
 ]
 

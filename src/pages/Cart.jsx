@@ -191,7 +191,7 @@ export default function Cart() {
             </Link>
           </div>
           <p className="px-2 text-body-sm text-text-tertiary">
-            Payments are secured by Paystack &amp; Flutterwave. Cash on delivery is available in select areas.
+            Cash on delivery is the available payment method — pay the rider when your order arrives.
           </p>
         </div>
       </div>

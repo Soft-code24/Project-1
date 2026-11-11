@@ -106,7 +106,7 @@ export function Footer() {
           </ul>
           <div className="mt-5 rounded-xl border border-white/10 dark:border-text-tertiary/20 bg-white/5 dark:bg-text-primary/5 p-4">
             <p className="text-label-md text-white">Payments accepted</p>
-            <p className="mt-1 text-body-sm text-white/80 dark:text-text-tertiary">Paystack · Flutterwave · Cash on delivery</p>
+            <p className="mt-1 text-body-sm text-white/80 dark:text-text-tertiary">Cash on delivery</p>
             <Link
               to="/admin/login"
               className="mt-3 inline-block text-label-sm font-semibold text-primary transition-colors hover:text-orange-400 dark:hover:text-orange-400"

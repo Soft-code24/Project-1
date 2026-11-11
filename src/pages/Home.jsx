@@ -15,7 +15,7 @@ import { SEO } from '../components/SEO.jsx'
 const pillars = [
   { icon: Zap, tone: 'orange', title: '30-min Delivery', sub: 'Hot to your doorstep' },
   { icon: Leaf, tone: 'emerald', title: 'Fresh & Organic', sub: 'Farm-sourced quality' },
-  { icon: Lock, tone: 'sky', title: 'Secure Checkout', sub: 'Paystack & Flutterwave' },
+  { icon: Lock, tone: 'sky', title: 'Secure Checkout', sub: 'Cash on delivery' },
 ]
 
 const toneClasses = {

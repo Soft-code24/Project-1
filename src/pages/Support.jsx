@@ -21,7 +21,7 @@ const faqs = [
   },
   {
     q: 'What payment methods do you accept?',
-    a: 'We accept card payments and bank transfers via Paystack and Flutterwave, as well as cash on delivery in select areas.',
+    a: 'We accept cash on delivery — you pay the rider when your order arrives.',
   },
   {
     q: 'How do I cancel or get a refund?',

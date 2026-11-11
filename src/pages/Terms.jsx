@@ -39,7 +39,7 @@ export default function Terms() {
       <section className="mb-6">
         <h2 className="mb-3 font-display text-headline-md text-text-primary">Payments</h2>
         <p className="text-body-md text-text-secondary">
-          Payments are processed securely through Paystack and Flutterwave. We do not store your card details.
+          Cash on delivery is our payment method — you pay the rider when your order arrives.
         </p>
       </section>
 

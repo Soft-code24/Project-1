@@ -31,7 +31,7 @@ export default function Privacy() {
           How we use your data
         </h2>
         <p className="text-body-md text-text-secondary">
-          Your personal data is used to fulfil orders, process payments (through Paystack and Flutterwave),
+          Your personal data is used to fulfil orders, process cash on delivery payments,
           and provide customer support. We do not sell your personal data to third parties.
         </p>
       </section>
