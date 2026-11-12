@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { CheckCircle2, Receipt, Truck, Clock } from 'lucide-react'
-import { supabase } from '../lib/supabase.js'
 import { useAuth } from '../context/AuthContext.jsx'
+import { api } from '../lib/api.js'
 import { Button } from '../components/ui/Button.jsx'
 import { EmptyState } from '../components/ui/Form.jsx'
 import { formatNaira } from '../lib/currency.js'
@@ -26,23 +26,17 @@ export default function OrderConfirmation() {
   async function loadOrder() {
     try {
       setLoading(true)
-      // Fetch via Supabase (RLS ensures customers see only their own orders)
-      const { data, error } = await supabase
-        .from('orders')
-        .select('*, order_items(*)')
-        .eq('id', id)
-        .maybeSingle()
-      if (error) throw error
-      if (!data) {
+      const data = await api.getOrder(id)
+      if (!data || !data.order) {
         setError('Order not found')
         return
       }
-      // Ensure the order belongs to the current user (guest orders have no user_id match)
-      if (user && data.user_id !== user.id) {
+      const order = data.order
+      if (user && order.user_id !== user.id) {
         setError('You do not have access to this order')
         return
       }
-      setOrder(data)
+      setOrder(data.order)
     } catch (err) {
       setError(err.message || 'Failed to load order')
     } finally {
