@@ -1,4 +1,4 @@
-import { supabase } from './supabase.js'
+import { supabase, isSupabaseConfigured, getCurrentAccessToken } from './supabase.js'
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000'
 
@@ -12,10 +12,23 @@ async function apiRequest(path, options = {}) {
     headers['Content-Type'] = 'application/json'
   }
 
-  if (supabase) {
-    const { data: { session } } = await supabase.auth.getSession()
-    if (session?.access_token) {
-      headers.Authorization = `Bearer ${session.access_token}`
+  // Attach the current Supabase access token as a Bearer token. The token is
+  // kept in sync with Supabase auth state via onAuthStateChange in supabase.js,
+  // avoiding async getSession() calls on every request.
+  const token = getCurrentAccessToken()
+  if (token) {
+    headers.Authorization = `Bearer ${token}`
+  } else if (isSupabaseConfigured) {
+    // Fallback: try reading the session directly (covers edge cases where the
+    // auth state listener has not fired yet).
+    try {
+      const { data } = await supabase.auth.getSession()
+      const sessionToken = data?.session?.access_token
+      if (sessionToken) {
+        headers.Authorization = `Bearer ${sessionToken}`
+      }
+    } catch {
+      // Session unavailable — fall through without an Authorization header.
     }
   }
 
