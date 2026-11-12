@@ -18,7 +18,7 @@ export default function Account() {
   const navigate = useNavigate()
   const [editMode, setEditMode] = useState(false)
   const [formName, setFormName] = useState(user?.fullName || '')
-  const [formPhone, setFormPhone] = useState('')
+  const [formPhone, setFormPhone] = useState(user?.phone || '')
   const [saving, setSaving] = useState(false)
 
   if (isLoading) {
@@ -65,20 +65,18 @@ export default function Account() {
               <span className="mt-1 inline-block rounded-full bg-emerald-50 dark:bg-emerald-900/20 px-2.5 py-0.5 text-badge-xs font-medium text-emerald-700 dark:text-emerald-400">
                 {user.role === 'admin' ? 'Administrator' : 'Customer'}
               </span>
-              {!user.fullName && (
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => {
-                    setFormName(user.fullName || '')
-                    setFormPhone('')
-                    setEditMode(true)
-                  }}
-                >
-                  <Pencil size={14} aria-hidden="true" />
-                  Edit profile
-                </Button>
-              )}
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => {
+                  setFormName(user.fullName || '')
+                  setFormPhone(user.phone || '')
+                  setEditMode(true)
+                }}
+              >
+                <Pencil size={14} aria-hidden="true" />
+                Edit profile
+              </Button>
               {editMode && (
                 <form
                   onSubmit={(e) => {
@@ -107,6 +105,17 @@ export default function Account() {
                       onChange={(e) => setFormName(e.target.value)}
                       className={controlClass(!formName.trim())}
                       autoComplete="name"
+                    />
+                  </Field>
+                  <Field label="Email address" htmlFor="profile-email">
+                    <input
+                      id="profile-email"
+                      name="profile-email"
+                      type="email"
+                      value={user.email || ''}
+                      readOnly
+                      className={controlClass(false)}
+                      autoComplete="email"
                     />
                   </Field>
                   <Field label="Phone number" htmlFor="profile-phone">

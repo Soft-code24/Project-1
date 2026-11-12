@@ -11,6 +11,7 @@ function profileToUser(profile) {
     id: profile.id,
     email: profile.email,
     fullName: profile.full_name || null,
+    phone: profile.phone || null,
     role: profile.role,
     accountStatus: profile.account_status,
   }
