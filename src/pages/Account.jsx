@@ -1,9 +1,11 @@
+import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ChevronRight, LayoutDashboard, LogOut, Package, ShoppingBag, User } from 'lucide-react'
+import { ChevronRight, LayoutDashboard, LogOut, Package, ShoppingBag, User, Pencil } from 'lucide-react'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useToast } from '../context/ToastContext.jsx'
 import { Button } from '../components/ui/Button.jsx'
 import { EmptyState } from '../components/ui/Form.jsx'
+import { Field, controlClass } from '../components/ui/Form.jsx'
 
 const menuLinks = [
   { to: '/orders', label: 'My orders', description: 'Track and reorder', icon: Package },
@@ -11,9 +13,13 @@ const menuLinks = [
 ]
 
 export default function Account() {
-  const { user, logout, isLoading } = useAuth()
+  const { user, logout, updateProfile, isLoading } = useAuth()
   const { showToast } = useToast()
   const navigate = useNavigate()
+  const [editMode, setEditMode] = useState(false)
+  const [formName, setFormName] = useState(user?.fullName || '')
+  const [formPhone, setFormPhone] = useState('')
+  const [saving, setSaving] = useState(false)
 
   if (isLoading) {
     return (
@@ -51,14 +57,79 @@ export default function Account() {
         <div className="flex flex-col gap-5">
           <div className="flex items-center gap-4 rounded-2xl border border-border-subtle bg-surface p-5 shadow-card">
             <span className="flex h-14 w-14 items-center justify-center rounded-full bg-primary text-headline-md font-semibold text-white">
-              {(user.name?.charAt(0) || '?').toUpperCase()}
+              {(user.fullName?.charAt(0) || user.email?.charAt(0) || '?').toUpperCase()}
             </span>
             <div className="min-w-0">
-              <p className="truncate font-display text-headline-md text-text-primary">{user.name || 'Unknown'}</p>
+              <p className="truncate font-display text-headline-md text-text-primary">{user.fullName || 'Unknown'}</p>
               <p className="truncate text-body-md text-text-secondary">{user.email || 'No email'}</p>
               <span className="mt-1 inline-block rounded-full bg-emerald-50 dark:bg-emerald-900/20 px-2.5 py-0.5 text-badge-xs font-medium text-emerald-700 dark:text-emerald-400">
                 {user.role === 'admin' ? 'Administrator' : 'Customer'}
               </span>
+              {!user.fullName && (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => {
+                    setFormName(user.fullName || '')
+                    setFormPhone('')
+                    setEditMode(true)
+                  }}
+                >
+                  <Pencil size={14} aria-hidden="true" />
+                  Edit profile
+                </Button>
+              )}
+              {editMode && (
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault()
+                    setSaving(true)
+                    updateProfile({ full_name: formName.trim(), phone: formPhone.trim() || undefined })
+                      .then((result) => {
+                        if (result.ok) {
+                          setEditMode(false)
+                          setSaving(false)
+                          showToast('Profile updated')
+                        } else {
+                          setSaving(false)
+                          showToast(result.error || 'Failed to update profile', 'error')
+                        }
+                      })
+                  }}
+                  className="mt-3 flex flex-col gap-2"
+                >
+                  <Field label="Full name" htmlFor="profile-name" required>
+                    <input
+                      id="profile-name"
+                      name="profile-name"
+                      type="text"
+                      value={formName}
+                      onChange={(e) => setFormName(e.target.value)}
+                      className={controlClass(!formName.trim())}
+                      autoComplete="name"
+                    />
+                  </Field>
+                  <Field label="Phone number" htmlFor="profile-phone">
+                    <input
+                      id="profile-phone"
+                      name="profile-phone"
+                      type="tel"
+                      value={formPhone}
+                      onChange={(e) => setFormPhone(e.target.value)}
+                      className={controlClass(false)}
+                      autoComplete="tel"
+                    />
+                  </Field>
+                  <div className="flex gap-2">
+                    <Button variant="secondary" type="button" onClick={() => setEditMode(false)} disabled={saving}>
+                      Cancel
+                    </Button>
+                    <Button type="submit" disabled={saving || !formName.trim()}>
+                      {saving ? 'Saving…' : 'Save'}
+                    </Button>
+                  </div>
+                </form>
+              )}
             </div>
           </div>
 

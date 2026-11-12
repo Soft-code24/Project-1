@@ -173,6 +173,12 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ code, items }),
     }),
+
+  updateProfile: (body) =>
+    apiRequest('/customer/profile', {
+      method: 'PATCH',
+      body: JSON.stringify(body),
+    }),
 }
 
 export default api

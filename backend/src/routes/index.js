@@ -2,6 +2,7 @@ import { Router } from 'express'
 import authRoutes from './auth.routes.js'
 import categoryRoutes from './category.routes.js'
 import customerRoutes from './customer.routes.js'
+import customerProfileRoutes from './customerProfile.routes.js'
 import couponRoutes from './coupon.routes.js'
 import customerCouponRoutes from './customerCoupon.routes.js'
 import productRoutes from './product.routes.js'
@@ -18,6 +19,7 @@ const router = Router()
 router.use('/auth', authRoutes)
 router.use('/categories', categoryRoutes)
 router.use('/admin/customers', customerRoutes)
+router.use('/customer', customerProfileRoutes)
 router.use('/admin/coupons', couponRoutes)
 router.use('/coupons', customerCouponRoutes)
 router.use('/products', productRoutes)

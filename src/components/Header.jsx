@@ -75,7 +75,7 @@ export function Header() {
 
           <Link
             to="/account"
-            aria-label={user ? `Account: ${user.name || 'User'}` : 'Account'}
+            aria-label={user ? `Account: ${user.fullName || 'User'}` : 'Account'}
             className="flex h-11 w-11 items-center justify-center rounded-full bg-primary text-white shadow-sm transition-transform active:scale-95"
           >
             <User size={18} aria-hidden="true" />

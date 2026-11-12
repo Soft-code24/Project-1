@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { supabase, isSupabaseConfigured } from '../lib/supabase.js'
+import { api } from '../lib/api.js'
 
 const AuthContext = createContext(null)
 
@@ -9,7 +10,7 @@ function profileToUser(profile) {
   return {
     id: profile.id,
     email: profile.email,
-    fullName: profile.full_name,
+    fullName: profile.full_name || null,
     role: profile.role,
     accountStatus: profile.account_status,
   }
@@ -130,6 +131,24 @@ export function AuthProvider({ children }) {
     setUser(emptyUser)
   }
 
+  const updateProfile = async (updates) => {
+    if (!supabase) return { ok: false, error: 'Supabase is not configured on the frontend.' }
+    try {
+      const data = await api.updateProfile(updates)
+      const { fullName, email, role, accountStatus } = data.profile
+      setUser({
+        id: user?.id || '',
+        email,
+        fullName: fullName || null,
+        role,
+        accountStatus,
+      })
+      return { ok: true, user: { id: user?.id || '', email, fullName: fullName || null, role, accountStatus } }
+    } catch (err) {
+      return { ok: false, error: err.message || 'Failed to update profile' }
+    }
+  }
+
   const value = useMemo(() => ({
     user,
     isAdmin: user?.role === 'admin',
@@ -138,7 +157,8 @@ export function AuthProvider({ children }) {
     register,
     loginAsDemoCustomer,
     logout,
-  }), [user, loading])
+    updateProfile,
+  }), [user, loading, updateProfile])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
