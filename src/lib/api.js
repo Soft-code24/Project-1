@@ -175,7 +175,7 @@ export const api = {
     }),
 
   updateProfile: (body) =>
-    apiRequest('/customer/profile', {
+    apiRequest('/api/v1/customer/profile', {
       method: 'PATCH',
       body: JSON.stringify(body),
     }),
